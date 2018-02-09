@@ -1,0 +1,245 @@
+{% extends 'page.html' %}
+{% load staticfiles %}
+
+{%block imports_css %}
+ <link rel="stylesheet" type="text/css" href='{% static "css/fileInput/fileinput.min.css" %}'>
+ <link rel="stylesheet" type="text/css" href='{% static "js/plugins/datepicker/css/bootstrap-datetimepicker.css" %}'>
+    
+    <style type="text/css">
+
+    #rootwizard .nav-pills > li.active > a{
+    background-color: #4a89dc !important;
+    }
+
+    </style>
+
+{% endblock imports_css %}
+
+{% block title %}Inspeccion{% endblock title%}
+{% block mapa %}
+  <li><a href="/usuario/"><i class="glyphicon glyphicon-home"></i></a></li>
+  <li><a href="{% url 'lote.lote' %}">Listado de lote</a></li>
+  <li class="active">Registrar lote</li>
+{% endblock mapa %}
+{% block encabezado %}<!--lote-->{% endblock encabezado %}
+{% block opciones_listado %}  {% endblock opciones_listado %} 
+{% block busqueda %} {% endblock busqueda %}  
+
+{% block contenido %}
+
+  <div class="row" ><br><br>
+
+    <div class="col-lg-12">
+  
+        <div class="row">
+
+          <div class="panel" id="spy4">
+
+            <div class="panel-body">
+
+              <div class="row">
+                <!-- ko if: tabIndex()===0 -->
+                <div class="col-lg-6">
+tab 1
+                {% include 'inspeccion/_inspeccion_registro.html' %}
+
+                </div>
+                <!-- /ko -->
+
+                 {% for item in lista_d_capitulo %}
+
+                   <!-- ko if: tabIndex()==={{ forloop.counter }} -->
+                  <div class="col-lg-6">
+
+                  <h3>{{item.nombre_capitulo}} {{ forloop.counter }}</h3>
+
+                  <h3>{{item.descripcion_capitulo_falla}} {{ forloop.counter }}</h3>
+
+                  <div class="radio-custom radio-info mb5">
+                    <input type="radio" id="conforme" name="radioExample" value="1">
+                    <label for="conforme">Conforme</label>
+                  </div>
+
+
+                  <div class="radio-custom radio-info mb5">
+                    <input type="radio" id="noconforme" name="radioExample" value="2">
+                    <label for="noconforme">No Conforme</label>
+                  </div>
+
+
+                  <div class="radio-custom radio-info mb5">
+                    <input type="radio" id="noaplica" name="radioExample" value="3">
+                    <label for="noaplica">No aplica</label>
+                  </div>
+
+
+                  <div class="form-group">          
+                    <label>Documento</label>
+                    <input type="file" class="form-control" id="archivo2" name="archivo2"  data-bind="fileData:{value:soporte,allowedFileExtensions: ['png','jpg','jpge','pdf'],elErrorContainer: '#errorBlock', removeLabel:''}"/> 
+                  </div>
+
+                  </div>
+                  <!-- /ko -->
+
+                 {% endfor %}
+
+              </div><!--cierra row-->
+
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-bind="click:vistas_parciales">
+                <i class="fa fa-floppy-o"></i> Seguiente
+              </button>
+            </div>
+
+          </div>
+
+        </div><!--cierra row de validacion de la tabla-->
+
+    </div><!--col-lg-12" -->
+  </div><!--cierra row -->
+
+
+<!--Modal-->
+
+<div id="modal_apoyo" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+       <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="gridModalLabel" data-bind='text:titulo'></h4>
+      </div>
+       <div class="modal-body">
+
+        <form action="." method="post">
+        {% csrf_token %}
+
+          <div class="form-group">
+            <label>Nombre (*)</label>
+              <input type="text" data-bind="value:apoyoVO.nombre" class="form-control" placeholder="Dígite el nombre del apoyo"/>
+          </div>
+
+          <div class="form-group">
+            <label>Latitud (*)</label>
+              <input type="text" data-bind="value:apoyoVO.latitud" class="form-control" placeholder="Dígite la latitud"/>
+          </div>
+
+          <div class="form-group">
+            <label>Logitud (*)</label>
+              <input type="text" data-bind="value:apoyoVO.longitud" class="form-control" placeholder="Dígite la longitud"/>
+          </div>
+
+          <button type="button" class="btn btn-primary" data-bind="click:localizar_mapa"></i> Capturar ubicacion</button>
+
+        </form>
+
+       </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bind="click:guardar_apoyo">
+            <i class="fa fa-floppy-o"></i> Guardar
+          </button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
+<!--Modal-->
+
+<!--Loading-->
+  
+{% endblock contenido %}
+
+{% load staticfiles %}
+
+{%block imports %}
+
+  <script src='{% static "js/plugins/globalize/globalize.min.js" %}'></script>
+  <script src='{% static "js/plugins/moment/moment.min.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/plugins/datepicker/js/bootstrap-datetimepicker.js" %}'>
+  </script>
+ 
+  <script type="text/javascript" src='{% static "js/plugins/fileInput/fileinput.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/ViewModels/inspeccion/inspeccion.js" %}'></script>
+
+
+ <!--  <script>
+        $(document).ready(function () {
+            $('#rootwizard').bootstrapWizard({
+                'nextSelector': '.button-next',
+                'previousSelector': '.button-previous',
+                onTabShow: function (tab, navigation, index) {
+                    var $total = navigation.find('li').length;
+                    var $current = index + 1;
+                    var $percent = ($current / $total) * 100;
+                    $('#rootwizard .progress-bar').css({ width: $percent + '%' });
+                    //$('#rootwizard').find('.bar').css({ width: $percent + '%' });
+
+                    // If it's the last tab then hide the last button and show the finish instead
+                    if ($current >= $total) {
+                        //$('#rootwizard').find('.pager .next').hide();
+                        //$('#rootwizard').find('.pager .finish').show();
+                        //$('#rootwizard').find('.pager .finish').removeClass('disabled');
+                        $('#rootwizard').find('.modal-footer #btn_next').hide();
+                        $('#rootwizard').find('.modal-footer #btn_guardar').show();
+                    } else {
+                        //$('#rootwizard').find('.pager .next').show();
+                        //$('#rootwizard').find('.pager .finish').hide();
+                        $('#rootwizard').find('.modal-footer #btn_next').show();
+                        $('#rootwizard').find('.modal-footer  #btn_guardar').hide();
+                    }
+
+                },
+                onTabClick: function (tab, navigation, index) {
+                    switch (index) {
+                        case 0:
+                            if (InspeccionViewModel.errores_inspeccion().length == 0) {
+                                return true;
+                            } else {
+                                InspeccionViewModel.errores_inspeccion.showAllMessages();
+                                return false;
+                            }
+                            break;
+
+                    }
+
+                },
+                onNext: function (tab, navigation, index) {
+                    switch (index) {
+                        case 1:
+
+                            if (InspeccionViewModel.errores_inspeccion().length == 0) {
+
+                                return true;
+                            } else {
+                                InspeccionViewModel.errores_inspeccion.showAllMessages();
+                                return false;
+                            }
+
+
+
+                            break;
+
+                    }
+                }
+            });
+
+        });
+    </script> -->
+
+  <script type="text/javascript">
+
+    $(document).ready(function () {
+      //lote.consultar(1);//iniciamos la primera funcion
+      //lote.consultar_circuito();//iniciamos la primera funcion
+       inspeccion.consultar_apoyo();
+       //inspeccion.consultar_capitulo();
+
+    });  
+
+  </script>
+
+{% endblock imports %}
+

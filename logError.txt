@@ -1,0 +1,11 @@
+
+2018-02-05 10:29:21.544000--> views.py linea 212 --> lote: _wrapped_view() takes at least 1 argument (0 given)
+2018-02-05 10:30:10.672000--> views.py linea 212 --> lote: _wrapped_view() takes at least 1 argument (0 given)
+2018-02-05 10:31:53.083000--> views.py linea 211 --> lote: _wrapped_view() takes at least 1 argument (0 given)
+2018-02-05 10:32:38.742000--> views.py linea 210 --> lote: _wrapped_view() takes at least 1 argument (0 given)
+2018-02-05 10:34:14.453000--> views.py linea 210 --> lote: _wrapped_view() takes at least 1 argument (0 given)
+2018-02-05 10:34:52.315000--> views.py linea 210 --> lote: _wrapped_view() takes at least 1 argument (0 given)
+2018-02-05 10:35:55.842000--> views.py linea 200 --> lote: lista_sector
+2018-02-05 10:36:20.362000--> views.py linea 211 --> lote: _wrapped_view() takes at least 1 argument (0 given)
+2018-02-05 10:42:38.211000--> views.py linea 211 --> lote: _wrapped_view() takes at least 1 argument (0 given)
+2018-02-05 10:47:21.149000--> views.py linea 221 --> lote: global name 'serializer' is not defined

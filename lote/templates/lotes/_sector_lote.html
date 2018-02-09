@@ -1,0 +1,103 @@
+<div class="row">
+  <div class="col-lg-6">
+
+    <div class="panel-body">
+      <div class="form-group input-group">
+        <input type="text" class="form-control" placeholder="Buscar por nombre" id="txtBuscarS" data-bind="event:{keydown:function(d,e){if (e.keyCode === 13)consultar_sector();else return true;}}">
+          <span class="input-group-btn">
+              <button class="btn btn-default" type="button" id="btnConsultarTodos"><i class="fa fa-search" data-bind="click:consultar_sector()"></i></button>
+          </span>
+      </div>
+
+      <button type="button" data-bind="click : asociar_sector, visible:listado_sector()!=null && listado_sector().length > 0" class="btn btn-sm btn-primary btn-block"  >                        
+         <h4>Agregar - <i class="fa fa-hand-o-right fa-lg" aria-hidden="true"></i></h4>
+      </button>
+
+      <div class="row" data-bind="html:mensaje_sector"></div> 
+
+      <table class="table" data-bind="visible:listado_sector()!=null && listado_sector().length > 0">
+        <thead>
+          <tr>                      
+            <th width="10%">
+                <div class="option-group field admin-form">
+                  <label class="option option-primary"  style="">
+                    <input type="checkbox" data-bind="checked:checkall3">
+                    <span class="checkbox"></span>
+                  </label>
+                </div> 
+            </th>
+            <th>Nombre</th>
+          </tr>
+        </thead>
+        <tbody data-bind="foreach:{data:listado_sector, as:'item'}">
+          <tr>
+
+          <td>
+              <div class="option-group field admin-form">
+                <label class="option option-primary"  style="">
+                  <input type="checkbox" data-bind="checked:eliminado,value:id">
+                  <span class="checkbox"></span>
+                </label>
+              </div> 
+          </td>
+            <td data-bind="text:item.nombre"></td>
+
+          </tr>  
+        </tbody>
+       </table>
+
+    </div> <!--cierra panel-body-->  
+
+  </div><!--cierra pcol-lg-6-->  
+
+
+
+   <div class="col-lg-6">
+
+    <div class="panel-body">
+
+      <div class="form-group input-group">
+
+      </div>
+
+      <button type="button" data-bind="click : desasociar_sector" class="btn btn-sm btn-primary btn-block"  >                        
+          <h4><i class="fa fa-hand-o-left fa-lg" aria-hidden="true"></i>
+            - Quitar                      
+          </h4>
+      </button>
+
+      <table class="table" data-bind="visible:listado_sector_temporal()!=null && listado_sector_temporal().length > 0">
+        <thead>
+          <tr>                      
+            <th width="10%">
+                <div class="option-group field admin-form">
+                  <label class="option option-primary"  style="">
+                    <input type="checkbox" data-bind="checked:checkall4">
+                    <span class="checkbox"></span>
+                  </label>
+                </div> 
+            </th>
+            <th>Nombre</th>
+          </tr>
+        </thead>
+        <tbody data-bind="foreach:{data:listado_sector_temporal, as:'item'}">
+          <tr data-bind="if:!item.eliminado()">
+
+          <td>
+              <div class="option-group field admin-form">
+                <label class="option option-primary"  style="">
+                  <input type="checkbox" data-bind="checked:procesado,value:id">
+                  <span class="checkbox"></span>
+                </label>
+              </div> 
+          </td>
+          <td data-bind="text:item.nombre"></td>
+
+          </tr>  
+        </tbody>
+       </table>
+
+    </div> <!--cierra panel-body-->  
+
+  </div><!--cierra pcol-lg-6-->  
+</div><!--cierra row-->

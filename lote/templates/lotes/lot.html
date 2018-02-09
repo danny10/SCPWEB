@@ -1,0 +1,574 @@
+{% extends 'page.html' %}
+{% load staticfiles %}
+
+{%block imports_css %}
+ <link rel="stylesheet" type="text/css" href='{% static "css/fileInput/fileinput.min.css" %}'>
+    
+    <style type="text/css">
+
+    #rootwizard .nav-pills > li.active > a{
+    background-color: #4a89dc !important;
+    }
+
+    </style>
+
+{% endblock imports_css %}
+
+{% block title %}Lotes{% endblock title%}
+{% block mapa %}
+  <li><a href="/usuario/"><i class="glyphicon glyphicon-home"></i></a></li>
+  <li><a href="{% url 'lote.lote' %}">Listado de lote</a></li>
+  <li class="active">Registrar lote</li>
+{% endblock mapa %}
+{% block encabezado %}<!--lote-->{% endblock encabezado %}
+{% block opciones_listado %}  {% endblock opciones_listado %} 
+{% block busqueda %} {% endblock busqueda %}  
+
+{% block contenido %}
+
+  <div class="row" ><br><br>
+
+    <div class="col-lg-12">
+  
+        <div class="row">
+
+          <div class="panel" id="spy4">
+
+            <div class="panel-body">
+
+              <div class="row">
+
+                <div class="col-xs-12">
+                  <div class="clearfix"></div>
+                  <div class="table-header"></div>
+                    <div class="panel-body">
+
+                        <div class="row">
+                          <div id="rootwizard" class="col-lg-6">
+
+                            <div class="navbar">
+                              <div class="navbar-inner">
+                                <div class="container">
+                                  <ul>
+
+                                    <li id="paso1"><a href="#tab1" data-toggle="tab"> Nombre y contratista</a></li>
+                                    <li id="paso2"><a href="#tab2" data-toggle="tab"> Circuitos asociados</a></li>
+                                    <li id="paso3"><a href="#tab3" data-toggle="tab"> Barrios/sectores asociados</a></li>
+                                     <li id="paso4"><a href="#tab4" data-toggle="tab"> Poligonos asociados</a></li>
+
+                                  </ul>
+                                </div>
+                              </div>
+                            </div><!--cierra navbar-->
+
+                            <div id="bar" class="progress">
+                              <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div>
+                            </div>
+
+                            <div class="tab-content">
+                              <div class="tab-pane" id="tab1">
+                                <div class="modal-body">
+                                  <div class="row">
+                                    <div class="col-lg-12">
+
+                                      <div class="form-group">
+                                        <label>Nombre (*)</label>
+                                          <input type="text" data-bind="value:loteVO.nombre" class="form-control" placeholder="Dígite el nombre del lote"/>
+                                      </div>
+
+                                      <div class="form-group">            
+                                        <label>Contratista (*)</label>
+                                        <select class="form-control" data-bind="value:loteVO.contratista_id">
+                                            <option value="">[Seleccione..]</option>
+                                            {% for item in contratista %}
+                                              <option value="{{ item.id }}">{{ item.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                      </div>
+
+
+                                      <div class="form-group">            
+                                        <label>Municipio/Ciudad (*)</label>
+                                        <select class="form-control" data-bind="value:loteVO.provincia_id">
+                                            <option value="">[Seleccione..]</option>
+                                            {% for item in provincia %}
+                                              <option value="{{ item.id }}">{{ item.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                      </div>
+
+
+                                      <div class="form-group">            
+                                        <label>Sucursal (*)</label>
+                                        <select class="form-control" data-bind="value:loteVO.sucursal_id">
+                                            <option value="">[Seleccione..]</option>
+                                            {% for item in sucursal %}
+                                              <option value="{{ item.id }}">{{ item.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                      </div>
+
+                                    </div>
+                                  </div>
+                                </div>
+                              </div><!--cierra tab 1-->
+
+
+                              <div class="tab-pane" id="tab2">
+                                <div class="modal-body">
+                                  <div class="row">
+                                    <div class="col-lg-6">
+
+                                      <div class="panel-body">
+                                        <div class="form-group input-group">
+                                          <input type="text" class="form-control" placeholder="Buscar por nombre" id="txtBuscarC" data-bind="event:{keydown:function(d,e){if (e.keyCode === 13)consultar_circuito();else return true;}}">
+                                            <span class="input-group-btn">
+                                                <button class="btn btn-default" type="button" id="btnConsultarTodos"><i class="fa fa-search" data-bind="click:consultar_circuito()"></i></button>
+                                            </span>
+                                        </div>
+
+                                        <button type="button" data-bind="click : asociar_circuito, visible:listado_circuito()!=null && listado_circuito().length > 0" class="btn btn-sm btn-primary btn-block"  >                        
+                                            <h4>Agregar - <i class="fa fa-hand-o-right fa-lg" aria-hidden="true"></i></h4>
+                                        </button>
+                    
+                                        <div class="row" data-bind="html:mensaje_circuito"></div> 
+
+                                        <table class="table" data-bind="visible:listado_circuito()!=null && listado_circuito().length > 0">
+                                          <thead>
+                                            <tr>                      
+                                              <th width="10%">
+                                                  <div class="option-group field admin-form">
+                                                    <label class="option option-primary"  style="">
+                                                      <input type="checkbox" data-bind="checked:checkall">
+                                                      <span class="checkbox"></span>
+                                                    </label>
+                                                  </div> 
+                                              </th>
+                                              <th>Nombre</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody data-bind="foreach:{data:listado_circuito, as:'item'}">
+                                            <tr>
+
+                                            <td>
+                                                <div class="option-group field admin-form">
+                                                  <label class="option option-primary"  style="">
+                                                    <input type="checkbox" data-bind="checked:eliminado,value:id">
+                                                    <span class="checkbox"></span>
+                                                  </label>
+                                                </div> 
+                                            </td>
+                                              <td data-bind="text:item.nombre"></td>
+          
+                                            </tr>  
+                                          </tbody>
+                                         </table>
+
+                                      </div> <!--cierra panel-body-->  
+
+                                    </div><!--cierra pcol-lg-6-->  
+
+
+
+                                     <div class="col-lg-6">
+
+                                      <div class="panel-body">
+
+                                        <div class="form-group input-group">
+
+                                        </div>
+
+                                        <button type="button" data-bind="click : desasociar_circuito" class="btn btn-sm btn-primary btn-block"  >                        
+                                            <h4><i class="fa fa-hand-o-left fa-lg" aria-hidden="true"></i>
+                                              - Quitar                      
+                                            </h4>
+                                        </button>
+                    
+                                        <table class="table" data-bind="visible:listado_circuito_temporal()!=null && listado_circuito_temporal().length > 0">
+                                          <thead>
+                                            <tr>                      
+                                              <th width="10%">
+                                                  <div class="option-group field admin-form">
+                                                    <label class="option option-primary"  style="">
+                                                      <input type="checkbox" data-bind="checked:checkall2">
+                                                      <span class="checkbox"></span>
+                                                    </label>
+                                                  </div> 
+                                              </th>
+                                              <th>Nombre</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody data-bind="foreach:{data:listado_circuito_temporal, as:'item'}">
+                                            <tr data-bind="if:!item.eliminado()">
+
+                                            <td>
+                                                <div class="option-group field admin-form">
+                                                  <label class="option option-primary"  style="">
+                                                    <input type="checkbox" data-bind="checked:procesado,value:id">
+                                                    <span class="checkbox"></span>
+                                                  </label>
+                                                </div> 
+                                            </td>
+                                            <td data-bind="text:item.nombre"></td>
+          
+                                            </tr>  
+                                          </tbody>
+                                         </table>
+
+                                      </div> <!--cierra panel-body-->  
+
+                                    </div><!--cierra pcol-lg-6-->  
+                                  </div><!--cierra row-->
+                                </div><!--cierra modal-body-->
+                              </div><!--cierra tab 2-->
+
+
+
+
+                              <div class="tab-pane" id="tab3">
+                                <div class="modal-body">
+                                  <div class="row">
+                                    <div class="col-lg-6">
+
+                                      <div class="panel-body">
+                                        <div class="form-group input-group">
+                                          <input type="text" class="form-control" placeholder="Buscar por nombre" id="txtBuscarS" data-bind="event:{keydown:function(d,e){if (e.keyCode === 13)consultar_sector();else return true;}}">
+                                            <span class="input-group-btn">
+                                                <button class="btn btn-default" type="button" id="btnConsultarTodos"><i class="fa fa-search" data-bind="click:consultar_sector()"></i></button>
+                                            </span>
+                                        </div>
+
+                                        <button type="button" data-bind="click : asociar_sector, visible:listado_sector()!=null && listado_sector().length > 0" class="btn btn-sm btn-primary btn-block"  >                        
+                                           <h4>Agregar - <i class="fa fa-hand-o-right fa-lg" aria-hidden="true"></i></h4>
+                                        </button>
+                    
+                                        <div class="row" data-bind="html:mensaje_sector"></div> 
+
+                                        <table class="table" data-bind="visible:listado_sector()!=null && listado_sector().length > 0">
+                                          <thead>
+                                            <tr>                      
+                                              <th width="10%">
+                                                  <div class="option-group field admin-form">
+                                                    <label class="option option-primary"  style="">
+                                                      <input type="checkbox" data-bind="checked:checkall3">
+                                                      <span class="checkbox"></span>
+                                                    </label>
+                                                  </div> 
+                                              </th>
+                                              <th>Nombre</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody data-bind="foreach:{data:listado_sector, as:'item'}">
+                                            <tr>
+
+                                            <td>
+                                                <div class="option-group field admin-form">
+                                                  <label class="option option-primary"  style="">
+                                                    <input type="checkbox" data-bind="checked:eliminado,value:id">
+                                                    <span class="checkbox"></span>
+                                                  </label>
+                                                </div> 
+                                            </td>
+                                              <td data-bind="text:item.nombre"></td>
+          
+                                            </tr>  
+                                          </tbody>
+                                         </table>
+
+                                      </div> <!--cierra panel-body-->  
+
+                                    </div><!--cierra pcol-lg-6-->  
+
+
+
+                                     <div class="col-lg-6">
+
+                                      <div class="panel-body">
+
+                                        <div class="form-group input-group">
+
+                                        </div>
+
+                                        <button type="button" data-bind="click : desasociar_sector" class="btn btn-sm btn-primary btn-block"  >                        
+                                            <h4><i class="fa fa-hand-o-left fa-lg" aria-hidden="true"></i>
+                                              - Quitar                      
+                                            </h4>
+                                        </button>
+                    
+                                        <table class="table" data-bind="visible:listado_sector_temporal()!=null && listado_sector_temporal().length > 0">
+                                          <thead>
+                                            <tr>                      
+                                              <th width="10%">
+                                                  <div class="option-group field admin-form">
+                                                    <label class="option option-primary"  style="">
+                                                      <input type="checkbox" data-bind="checked:checkall4">
+                                                      <span class="checkbox"></span>
+                                                    </label>
+                                                  </div> 
+                                              </th>
+                                              <th>Nombre</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody data-bind="foreach:{data:listado_sector_temporal, as:'item'}">
+                                            <tr data-bind="if:!item.eliminado()">
+
+                                            <td>
+                                                <div class="option-group field admin-form">
+                                                  <label class="option option-primary"  style="">
+                                                    <input type="checkbox" data-bind="checked:procesado,value:id">
+                                                    <span class="checkbox"></span>
+                                                  </label>
+                                                </div> 
+                                            </td>
+                                            <td data-bind="text:item.nombre"></td>
+          
+                                            </tr>  
+                                          </tbody>
+                                         </table>
+
+                                      </div> <!--cierra panel-body-->  
+
+                                    </div><!--cierra pcol-lg-6-->  
+                                  </div><!--cierra row-->
+                                </div><!--cierra modal-body-->
+                              </div><!--cierra tab 3-->
+
+
+
+                              <div class="tab-pane" id="tab4">
+                                <div class="modal-body">
+                                  <div class="row">
+                                      
+                                      <div class="form-group">
+                                        <label>Nombre (*)</label>
+                                          <input type="text" class="form-control" data-bind="value:nombre_poligono" placeholder="Dígite el nombre del poligono"/>
+
+                                          <a  data-placement="top"  data-toggle="tooltip" title="" data-original-title="Agregar poligonos" data-bind="click:asociar_poligono"  style="cursor:pointer;">
+                                            <i class="fa fa-plus fa-2x"></i>
+                                          </a>
+
+                                          <a  data-placement="top"  data-toggle="tooltip" title="" data-original-title="Eliminar poligonos" data-bind="click:desasociar_poligono"  style="cursor:pointer;">
+                                            <i class="fa fa-trash fa-2x"></i>
+                                          </a>
+
+                                      </div>
+
+
+                                       <table class="table" data-bind="visible:listado_poligono_temporal()!=null && listado_poligono_temporal().length > 0">
+                                          <thead>
+                                            <tr>
+                                              <th width="10%">
+                                                  <div class="option-group field admin-form">
+                                                    <label class="option option-primary"  style="">
+                                                      <input type="checkbox" data-bind="checked:checkall4">
+                                                      <span class="checkbox"></span>
+                                                    </label>
+                                                  </div> 
+                                              </th>                      
+                                              <th>Nombre</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody data-bind="foreach:{data:listado_poligono_temporal, as:'item'}">
+                                            <tr data-bind="if:!item.eliminado()">
+
+                                                <td>
+                                                  <div class="option-group field admin-form">
+                                                    <label class="option option-primary"  style="">
+                                                      <input type="checkbox" data-bind="checked:procesado">
+                                                      <span class="checkbox"></span>
+                                                    </label>
+                                                  </div> 
+                                                </td>
+                                                <td data-bind="text:item.nombre"></td>
+          
+                                            </tr>  
+                                          </tbody>
+                                         </table>
+
+
+                                  </div>
+                                </div>
+                              </div><!--cierra tab 4-->
+
+
+                            
+                            </div><!--cierra tab-content-->
+                              
+                              <div class="modal-footer">
+
+                                <div style="float:right">
+                                  <input type='button' id="btn_next" class='btn btn-primary button-next' name='next' value='Siguiente' />
+                                  <input type='button' id="btn_guardar" style="display:none;" class='btn btn-guardar btn-primary' name='previous' value='Finalizar'  data-bind="click:guardar_lote"/>
+                                </div>
+                                <div style="float:left">
+                                  <input type='button' class='btn button-previous' name='previous' value='Atrás' />
+                                </div>
+                              </div><!--cierra footer-->
+
+                            </div><!--cierra tab-content-->
+
+                          </div><!--cierra rootwizard-->
+                        </div><!--cierra row-->
+                    </div><!--cierra panel body-->
+
+                </div><!--cierra col 12-->
+              </div><!--cierra row-->
+
+            </div>
+          </div>
+
+        </div><!--cierra row de validacion de la tabla-->
+
+    </div><!--col-lg-12" -->
+  </div><!--cierra row -->
+
+
+  <!--Modal-->
+
+<!--Modal-->
+
+
+<!--Loading-->
+  
+{% endblock contenido %}
+
+{% load staticfiles %}
+
+{%block imports %}
+
+  <script src='{% static "js/plugins/accounting/accounting.min.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/plugins/fileInput/fileinput.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/ViewModels/lote/lote.js" %}'></script>
+
+  <script>
+        $(document).ready(function () {
+            $('#rootwizard').bootstrapWizard({
+                'nextSelector': '.button-next',
+                'previousSelector': '.button-previous',
+                onTabShow: function (tab, navigation, index) {
+                    var $total = navigation.find('li').length;
+                    var $current = index + 1;
+                    var $percent = ($current / $total) * 100;
+                    $('#rootwizard .progress-bar').css({ width: $percent + '%' });
+                    //$('#rootwizard').find('.bar').css({ width: $percent + '%' });
+
+                    // If it's the last tab then hide the last button and show the finish instead
+                    if ($current >= $total) {
+                        //$('#rootwizard').find('.pager .next').hide();
+                        //$('#rootwizard').find('.pager .finish').show();
+                        //$('#rootwizard').find('.pager .finish').removeClass('disabled');
+                        $('#rootwizard').find('.modal-footer #btn_next').hide();
+                        $('#rootwizard').find('.modal-footer #btn_guardar').show();
+                    } else {
+                        //$('#rootwizard').find('.pager .next').show();
+                        //$('#rootwizard').find('.pager .finish').hide();
+                        $('#rootwizard').find('.modal-footer #btn_next').show();
+                        $('#rootwizard').find('.modal-footer  #btn_guardar').hide();
+                    }
+
+                },
+                onTabClick: function (tab, navigation, index) {
+                    switch (index) {
+                        case 0:
+                            if (LoteViewModel.errores_lote().length == 0) {
+                                return true;
+                            } else {
+                                LoteViewModel.errores_lote.showAllMessages();
+                                return false;
+                            }
+                            break;
+
+                    }
+
+                },
+                onNext: function (tab, navigation, index) {
+                    switch (index) {
+                        case 1:
+
+                            if (LoteViewModel.errores_lote().length == 0) {
+
+                                return true;
+                            } else {
+                                LoteViewModel.errores_lote.showAllMessages();
+                                return false;
+                            }
+
+
+
+                            break;
+
+
+                        case 2:
+
+                                var count=0;
+
+                                ko.utils.arrayForEach(lote.listado_circuito_temporal(), function(d) {
+
+                                  count=1;
+                                });
+
+                                if(count==0){
+
+                                    $.confirm({
+                                      title:'Informativo',
+                                      content: '<h4><i class="text-info fa fa-info-circle fa-2x"></i>Seleccione los circuitos a asociar.<h4>',
+                                      cancelButton: 'Cerrar',
+                                      confirmButton: false
+                                  });
+
+                                    return false;
+
+                                }else{
+
+                                  return true;
+                                }
+
+                                break
+
+
+                        case 3:
+
+                                var count2=0;
+
+                                ko.utils.arrayForEach(lote.listado_sector_temporal(), function(d) {
+
+                                  count2=1;
+                                });
+
+                                if(count2==0){
+
+                                    $.confirm({
+                                      title:'Informativo',
+                                      content: '<h4><i class="text-info fa fa-info-circle fa-2x"></i>Seleccione los sectores a asociar.<h4>',
+                                      cancelButton: 'Cerrar',
+                                      confirmButton: false
+                                  });
+
+                                    return false;
+
+                                }else{
+                                  
+                                  return true;
+                                }
+
+                                break
+
+                    }
+                }
+            });
+
+        });
+    </script>
+
+  <script type="text/javascript">
+
+    $(document).ready(function () {
+      lote.consultar(1);//iniciamos la primera funcion
+      lote.consultar_circuito();//iniciamos la primera funcion
+
+    });  
+
+  </script>
+
+{% endblock imports %}
+

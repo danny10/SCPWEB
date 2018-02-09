@@ -1,0 +1,163 @@
+{% extends 'page.html' %}
+{% load staticfiles %}
+
+{%block imports_css %}
+ <link rel="stylesheet" type="text/css" href='{% static "css/fileInput/fileinput.min.css" %}'>
+
+{% endblock imports_css %}
+
+{% block title %}Poligonos{% endblock title%}
+{% block mapa %}
+  <li><a href="/usuario/"><i class="glyphicon glyphicon-home"></i></a></li>
+  <li><a href="{% url 'lote.lote' %}">Listado de lote</a></li>
+  <li class="active">Poligono</li>
+{% endblock mapa %}
+{% block encabezado %}<!--contratista-->{% endblock encabezado %}
+
+{% block contenido %}
+
+  <div class="row" ><br><br>
+
+    <div class="col-lg-12">
+  
+        <div class="row">
+
+          <div class="panel" id="spy4">
+            <div class="panel-heading">
+              <span class="panel-title"></span><span>Listado de poligonos del lote</span>
+
+              <span data-bind="text:'- N° de Registos: ' + paginacion.totalRegistrosBuscados() + ' de ' + paginacion.total()"></span>
+
+            </div>
+            <div class="panel-body">
+
+              <div data-bind="html: mensaje"></div>
+              <div class="table-responsive" data-bind="visible:(listado()!=null && listado().length > 0)">
+
+                <table class="table">
+                  <thead>
+                      <tr>
+                        <th style="width:33%" width="10%">
+                           <div class="option-group field admin-form">
+                              <label class="option option-primary"  style="">
+                                <input type="checkbox" data-bind="checked:checkall">
+                                <span class="checkbox"></span>
+                              </label>
+                            </div>
+                        </th>
+                        <th style="width:33%">Nombre</th>
+                        <th style="width:33%"></th>
+                      </tr>
+                  </thead>
+
+                  <tbody data-bind="foreach:{data:listado, as:'item'}">
+                    <tr>
+                      <td> 
+                        <div class="option-group field admin-form">
+                          <label class="option option-primary"  style="">
+                            <input type="checkbox" data-bind="checked:eliminado,value:poligono.id">
+                            <span class="checkbox"></span>
+                          </label>
+                        </div>
+                      </td> 
+
+                      <td data-bind="text: item.poligono.nombre"></td>
+                      <td>
+                          <a href="#" data-bind="click:$root.consultar_por_id">
+                           <i class="fa fa-pencil-square-o fa-2x" aria-hidden="true"></i>
+                          </a>
+
+                      </td>
+
+                    </tr>
+                     
+                  </tbody>
+                </table>
+
+                <div id="paginacion" >
+                  <div data-bind="pagination: {
+                                currentPage: paginacion.pagina_actual,
+                                totalCount: paginacion.total,
+                                pageSize:paginacion.cantidad_por_paginas,
+                                maxPages: paginacion.maxPaginas,
+                                directions: paginacion.direcciones,
+                                boundary: paginacion.limite,
+                                text: paginacion.text }">
+
+                  </div>
+                </div>
+                
+              </div>
+
+            </div>
+          </div>
+
+        </div><!--cierra row de validacion de la tabla-->
+
+    </div><!--col-lg-12" -->
+  </div><!--cierra row -->
+
+
+  <!--Modal-->
+
+<div id="modal_acciones" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+       <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="gridModalLabel" data-bind='text:titulo'></h4>
+      </div>
+       <div class="modal-body">
+
+        <form action="." method="post">
+        {% csrf_token %}
+
+          <!-- input type="hidden" value="{{id_lote}}" id="lote" name="lote"/> -->
+
+          <div class="form-group">
+            <label>Nombre (*)</label>
+              <input type="text" data-bind="value:poligonoVO.nombre" class="form-control" placeholder="Dígite el nombre del poligono"/>
+          </div>
+
+        </form>
+
+       </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bind="click:guardar">
+            <i class="fa fa-floppy-o"></i> Guardar
+          </button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
+<!--Modal-->
+
+
+<!--Loading-->
+  
+{% endblock contenido %}
+
+{% load staticfiles %}
+
+{%block imports %}
+
+  <script src='{% static "js/plugins/accounting/accounting.min.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/plugins/fileInput/fileinput.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/ViewModels/poligono/poligono.js" %}'></script>
+
+  <script type="text/javascript">
+
+    $(document).ready(function () {
+      poligono.poligonoVO.lote_id({{id_lote}});
+      poligono.consultar(1);//iniciamos la primera funcion
+
+
+    });  
+
+  </script>
+
+{% endblock imports %}
+

@@ -1,0 +1,291 @@
+{% extends 'page.html' %}
+{% load staticfiles %}
+
+{%block imports_css %}
+ <link rel="stylesheet" type="text/css" href='{% static "css/fileInput/fileinput.min.css" %}'>
+ <link rel="stylesheet" type="text/css" href='{% static "js/plugins/datepicker/css/bootstrap-datetimepicker.css" %}'>
+    
+    <style type="text/css">
+
+    #rootwizard .nav-pills > li.active > a{
+    background-color: #4a89dc !important;
+    }
+
+    </style>
+
+{% endblock imports_css %}
+
+{% block title %}Inspeccion{% endblock title%}
+{% block mapa %}
+  <li><a href="/usuario/"><i class="glyphicon glyphicon-home"></i></a></li>
+  <li><a href="{% url 'lote.lote' %}">Listado de lote</a></li>
+  <li class="active">Registrar lote</li>
+{% endblock mapa %}
+{% block encabezado %}<!--lote-->{% endblock encabezado %}
+{% block opciones_listado %}  {% endblock opciones_listado %} 
+{% block busqueda %} {% endblock busqueda %}  
+
+{% block contenido %}
+
+  <div class="row" ><br><br>
+
+    <div class="col-lg-12">
+  
+        <div class="row">
+
+          <div class="panel" id="spy4">
+
+            <div class="panel-body">
+
+              <div class="row">
+                
+                <div class="col-lg-6" data-bind="visible:tabIndex()===0">
+
+                {% include 'inspeccion/_inspeccion_registro.html' %}
+
+                </div>
+               
+
+                
+                 <!--ko foreach:{data:inspeccionVO.capitulos, as:'item'}-->
+
+                   <!--ko if: $parent.tabIndex()==$index()+1-->
+
+                    <h3 data-bind="text:item.nombre"> </h3>
+
+                      <div class="col-lg-12" data-bind="foreach:{data:item.fallas, as:'fall'}">
+                        
+                            <h3 data-bind="text:fall.descripcion"></h3>
+
+                            <div class="radio-custom radio-info mb5">
+                              <input type="radio" data-bind="checked:fall.calificacion, attr:{name:'radioExample'+fall.capitulo_falla_id(), id:'conforme'+fall.capitulo_falla_id()}" value="1">
+                              <label data-bind="attr:{for:'conforme'+fall.capitulo_falla_id()}">Conforme</label>
+                            </div>
+
+
+                            <div class="radio-custom radio-info mb5">
+                              <input type="radio" data-bind="checked:fall.calificacion, attr:{name:'radioExample'+fall.capitulo_falla_id(), id:'noconforme'+fall.capitulo_falla_id()}" value="2">
+                              <label data-bind="attr:{for:'noconforme'+fall.capitulo_falla_id()}">No Conforme</label>
+                            </div>
+
+
+                            <div class="radio-custom radio-info mb5">
+                              <input type="radio" data-bind="checked:fall.calificacion, attr:{name:'radioExample'+fall.capitulo_falla_id(), id:'noaplica'+fall.capitulo_falla_id()}" value="3">
+                              <label data-bind="attr:{for:'noaplica'+fall.capitulo_falla_id()}">No aplica</label>
+                            </div>
+
+                             <button type="button" class="btn btn-primary" data-bind="click:$root.abrir_modal_foto">Cargar foto</button>
+
+<!--                             <div class="form-group">          
+                              <label>Documento</label>
+                              <input type="file" class="form-control" data-bind="fileData:{value:fall.soporte,allowedFileExtensions: ['png','jpg','jpge','pdf'], elErrorContainer: '#errorBlock'+ fall.id, removeLabel:''}, attr:{name='archivo'+fall.capitulo_falla_id, id:'archivo' + fall.id}"/> 
+                            </div> -->
+
+                            <div class="form-group">
+                              <label>Observacion</label>
+                              <textarea rows="3" data-bind="value:fall.observaciones" class="form-control" placeholder="Dígite la obervacion"></textarea>
+                            </div>
+
+                      </div>
+
+                    <!--/ko-->
+
+                <!--/ko-->
+                 
+              </div><!--cierra row-->
+
+            </div>
+
+            <div class="modal-footer">
+
+              <button type="button" class="btn btn-primary" data-bind="click:atras_vistas_parciales">Atras</button>
+
+              <button type="button" class="btn btn-primary" data-bind="click:vistas_parciales">
+                <span data-bind="text:nombreBoton"></span>
+              </button>
+
+               
+            </div>
+
+          </div>
+
+        </div><!--cierra row de validacion de la tabla-->
+
+    </div><!--col-lg-12" -->
+  </div><!--cierra row -->
+
+
+  <!--Modal-->
+
+<div id="modal_abrir_foto" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+       <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="gridModalLabel" data-bind='text:titulo'></h4>
+      </div>
+        <div class="modal-body">
+
+          <div class="row">
+            <div class="col-lg-6">
+
+              <form action="." method="post">
+
+                <div class="form-group">          
+                <label>Foto</label>
+                 <input type="file" class="note-image-input" id="archivo" name="archivo"  multiple data-bind="fileData:{value:foto,allowedFileExtensions: ['png','jpg','jpge'],elErrorContainer: '#errorBlock', removeLabel:''}"/>  
+                </div>
+
+              </form>
+
+              <button type="button" class="btn btn-primary" data-bind="click:guardar_soporte_foto">
+                <i class="fa fa-floppy-o"></i> Guardar
+              </button>
+
+
+
+              <table class="table" data-bind="visible:soportes_fotos()!=null && soportes_fotos().length > 0">
+                <thead>
+                  <tr>
+                    <th width="10%">
+                        <div class="option-group field admin-form">
+                          <label class="option option-primary"  style="">
+                            <input type="checkbox" data-bind="checked:checkall">
+                            <span class="checkbox"></span>
+                          </label>
+                        </div> 
+                    </th>                      
+                    <th>Nombre</th>
+                  </tr>
+                </thead>
+                <tbody data-bind="foreach:{data:soportes_fotos, as:'item'}">
+                  <tr data-bind="if:!item.eliminado()">
+
+                      <td>
+                        <div class="option-group field admin-form">
+                          <label class="option option-primary"  style="">
+                            <input type="checkbox" data-bind="checked:procesado">
+                            <span class="checkbox"></span>
+                          </label>
+                        </div> 
+                      </td>
+                      <td>  <a data-gallery="" data-bind="attr: {href: item.foto}" target="_blank" style="cursor:pointer;">
+                            <img data-bind='attr:{src:item.foto}' height="40" width="40">
+                        </a> 
+                      </td>
+
+                  </tr>  
+                </tbody>
+              </table>
+
+
+
+
+            </div>      
+          </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+<!--Modal-->
+
+
+
+<input type="hidden" id="hdCantidad" value="{{capitulo|length}}">
+
+<!--Modal-->
+
+<div id="modal_apoyo" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+       <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="gridModalLabel" data-bind='text:titulo'></h4>
+      </div>
+       <div class="modal-body">
+
+        <form action="." method="post">
+        {% csrf_token %}
+
+          <div class="form-group">
+            <label>Nombre (*)</label>
+              <input type="text" data-bind="value:apoyoVO.nombre" class="form-control" placeholder="Dígite el nombre del apoyo"/>
+          </div>
+
+          <div class="form-group">
+            <label>Latitud (*)</label>
+              <input type="text" data-bind="value:apoyoVO.latitud" class="form-control" placeholder="Dígite la latitud"/>
+          </div>
+
+          <div class="form-group">
+            <label>Logitud (*)</label>
+              <input type="text" data-bind="value:apoyoVO.longitud" class="form-control" placeholder="Dígite la longitud"/>
+          </div>
+
+          <button type="button" class="btn btn-primary" data-bind="click:localizar_mapa"></i> Capturar ubicacion</button>
+
+        </form>
+
+       </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bind="click:guardar_apoyo">
+            <i class="fa fa-floppy-o"></i> Guardar
+          </button>
+        </div>
+
+    </div>
+  </div>
+</div>
+
+<!--Modal-->
+
+<!--Loading-->
+  
+{% endblock contenido %}
+
+{% load staticfiles %}
+
+{%block imports %}
+
+  <script src='{% static "js/plugins/globalize/globalize.min.js" %}'></script>
+  <script src='{% static "js/plugins/moment/moment.min.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/plugins/datepicker/js/bootstrap-datetimepicker.js" %}'>
+  </script>
+ 
+  <script type="text/javascript" src='{% static "js/plugins/fileInput/fileinput.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/ViewModels/inspeccion/editar_inspeccion.js" %}'></script>
+
+  <script type="text/javascript">
+
+    $(document).ready(function () {
+      //lote.consultar(1);//iniciamos la primera funcion
+      //lote.consultar_circuito();//iniciamos la primera funcion
+       inspeccion.consultar_apoyo();
+       //inspeccion.consultar_por_id({{id_inspeccion}});
+       //inspeccion.inspeccionVO.lote_id({{id_lote}});
+       inspeccion.consultar_capitulo_falla({{id_inspeccion}});
+       
+
+       // var fallas = [];
+
+       // {% for item in capitulo %}        
+       //   inspeccion.inspeccionVO.capitulos.push({id:{{ item.id }}, nombre:'{{ item.nombre }}', fallas:ko.observableArray([  
+       //    {% for fall in item.fallas %}
+       //      { capitulo_falla_id:{{fall.id}}, descripcion:'{{ fall.descripcion }}', calificacion: ko.observable(''), observaciones: ko.observable(''), soportes:ko.observableArray([]) }
+       //      {% if capitulo|length > forloop.counter %}
+       //      ,
+       //      {% endif %}
+       //    {% endfor %} ])});
+
+       // {% endfor %}
+     
+       // // //inspeccion.consultar_capitulo();
+
+    });  
+
+  </script>
+
+{% endblock imports %}
+

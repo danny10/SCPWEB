@@ -1,0 +1,51 @@
+<div class="row">
+  <div class="col-lg-6">
+    
+    <div class="form-group">
+      <label>Nombre (*)</label>
+        <input type="text" class="form-control" data-bind="value:nombre_poligono" placeholder="Dígite el nombre del poligono"/>
+
+        <a  data-placement="top"  data-toggle="tooltip" title="" data-original-title="Agregar poligonos" data-bind="click:asociar_poligono"  style="cursor:pointer;">
+          <i class="fa fa-plus fa-2x"></i>
+        </a>
+
+        <a  data-placement="top"  data-toggle="tooltip" title="" data-original-title="Eliminar poligonos" data-bind="click:desasociar_poligono"  style="cursor:pointer;">
+          <i class="fa fa-trash fa-2x"></i>
+        </a>
+
+    </div>
+
+
+      <table class="table" data-bind="visible:listado_poligono_temporal()!=null && listado_poligono_temporal().length > 0">
+        <thead>
+          <tr>
+            <th width="10%">
+                <div class="option-group field admin-form">
+                  <label class="option option-primary"  style="">
+                    <input type="checkbox" data-bind="checked:checkall4">
+                    <span class="checkbox"></span>
+                  </label>
+                </div> 
+            </th>                      
+            <th>Nombre</th>
+          </tr>
+        </thead>
+        <tbody data-bind="foreach:{data:listado_poligono_temporal, as:'item'}">
+          <tr data-bind="if:!item.eliminado()">
+
+              <td>
+                <div class="option-group field admin-form">
+                  <label class="option option-primary"  style="">
+                    <input type="checkbox" data-bind="checked:procesado">
+                    <span class="checkbox"></span>
+                  </label>
+                </div> 
+              </td>
+              <td data-bind="text:item.nombre"></td>
+
+          </tr>  
+        </tbody>
+      </table>
+
+  </div><!--cierra col-lg-6-->
+</div><!--cierra row-->

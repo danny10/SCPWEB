@@ -1,0 +1,302 @@
+{% extends 'page.html' %}
+{% load staticfiles %}
+
+{%block imports_css %}
+ <link rel="stylesheet" type="text/css" href='{% static "css/fileInput/fileinput.min.css" %}'>
+    
+    <style type="text/css">
+
+    #rootwizard .nav-pills > li.active > a{
+    background-color: #4a89dc !important;
+    }
+
+    </style>
+
+{% endblock imports_css %}
+
+{% block title %}Inspeccion{% endblock title%}
+{% block mapa %}
+  <li><a href="/usuario/"><i class="glyphicon glyphicon-home"></i></a></li>
+  <li><a href="{% url 'lote.lote' %}">Listado de lote</a></li>
+  <li class="active">Inspecciones</li>
+{% endblock mapa %}
+{% block encabezado %}<!--lote-->{% endblock encabezado %}
+
+{% block opciones_listado %}  
+
+<li>
+  <a href="#" data-bind="attr:{href:'../../registro_inspeccion/' + {{id_lote}}}" data-placement="right"  data-toggle="tooltip" data-original-title="Agregar nuevo registro">
+    <i class="fa fa-plus" style="font-size: 20px;"></i>
+  </a>
+
+  <li>
+    <a href="#" data-bind="click:eliminar" data-placement="right" data-toggle="tooltip" data-original-title="Eliminar registro(s)">
+      <i class="fa fa-trash" style="font-size: 20px;"></i>
+    </a>
+  </li>
+
+</li>
+
+{% endblock opciones_listado %}   
+
+{% block contenido %}
+
+  <div class="row" ><br><br>
+
+    <div class="col-lg-12">
+  
+        <div class="row">
+
+          <div class="panel" id="spy4">
+            <div class="panel-heading">
+              <span class="panel-title"></span><span>Listado de inspecciones del lote</span>
+
+              <span data-bind="text:'- N° de Registos: ' + paginacion.totalRegistrosBuscados() + ' de ' + paginacion.total()"></span>
+
+              <span class="panel-controls">
+                <a  data-placement="top"  data-toggle="tooltip" title="" data-original-title="Filtrar inspeccion" data-bind="click:filtrar_inspeccion" data-toggle="modal" style="cursor:pointer;">
+                  <i class="fa fa-filter fa-2x"></i>
+                </a>
+              </span>
+
+            </div>
+            <div class="panel-body">
+
+              <div data-bind="html: mensaje"></div>
+              <div class="table-responsive" data-bind="visible:(listado()!=null && listado().length > 0)">
+
+                <table class="table">
+                  <thead>
+                      <tr>
+                        <th style="width:10%" width="10%">
+                           <div class="option-group field admin-form">
+                              <label class="option option-primary"  style="">
+                                <input type="checkbox" data-bind="checked:checkall">
+                                <span class="checkbox"></span>
+                              </label>
+                            </div>
+                        </th>
+                        <th style="width:20%">Apoyo</th>
+                        <th style="width:14%">Año</th>
+                        <th style="width:18/%">Mes</th>
+                        <th style="width:14%">Inspeccion</th>
+                        <th style="width:14%">PNC abiertas</th>
+                        <th style="width:10%"></th>
+                      </tr>
+                  </thead>
+
+                  <tbody data-bind="foreach:{data:listado, as:'item'}">
+                    <tr>
+                      <td> 
+                        <div class="option-group field admin-form">
+                          <label class="option option-primary"  style="">
+                            <input type="checkbox" data-bind="checked:eliminado,value:id">
+                            <span class="checkbox"></span>
+                          </label>
+                        </div>
+                      </td> 
+
+                      <td data-bind="text: item.apoyo.nombre"></td>
+                      <td data-bind="text: item.ano_inspeccion"></td>
+                      <td data-bind="text: item.mes_inspeccion"></td>
+                      <td data-bind="text: item.numero_inspeccion"></td>
+                      <td></td>
+                      <td>
+                        
+                        <div class="btn-group text-right">
+                          <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-h fa-2x"></i>
+                          </a>
+
+                          <ul class="dropdown-menu" role="menu" style="left:-138px;top:19px">
+
+                            <li>
+                              <a href="#" data-bind="click:$root.ver_mas_detalle">
+                                  Ver detalle
+                              </a>
+                            </li>
+
+                            <li>
+                              <a href="#" data-bind="attr:{href:'../../actualizar_inspeccion/' + item.id}">
+                                Editar
+                              </a>
+                            </li>
+
+                          </ul>
+                        </div>
+
+                      </td>
+
+                    </tr>
+                     
+                  </tbody>
+                </table>
+
+                <div id="paginacion" >
+                  <div data-bind="pagination: {
+                                currentPage: paginacion.pagina_actual,
+                                totalCount: paginacion.total,
+                                pageSize:paginacion.cantidad_por_paginas,
+                                maxPages: paginacion.maxPaginas,
+                                directions: paginacion.direcciones,
+                                boundary: paginacion.limite,
+                                text: paginacion.text }">
+
+                  </div>
+                </div>
+                
+              </div>
+
+            </div>
+          </div>
+
+        </div><!--cierra row de validacion de la tabla-->
+
+        </div><!--cierra row de validacion de la tabla-->
+
+    </div><!--col-lg-12" -->
+  </div><!--cierra row -->
+
+
+
+  <div id="vermas_inspeccion" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+      
+        <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size: 30px;font-weight: bold;"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title" id="gridModalLabel" data-bind='text:titulo'></h4>
+              </div>
+              <div class="modal-body">
+
+                <strong>Nombre circuito : </strong><span data-bind="text:nombre_circuito"></span><br>  
+                <strong>Numero lote : </strong><span data-bind="text:nombre_lote"></span><br>
+                <strong>Nombre poligono : </strong><span data-bind="text:nombre_poligono"></span><br>
+                <strong>Nombre secotr : </strong><span data-bind="text:nombre_sector"></span><br>
+                <strong>Nombre apoyo : </strong><span data-bind="text:nombre_apoyo"></span><br>
+                <strong>Fecha : </strong><span data-bind="text:fecha_inspeccion"></span><br>
+                <strong>Numero inspeccion : </strong><span data-bind="text:inspeccion_numero"></span><br>
+
+              </div>
+          </div>
+        </div>
+      </div><!--cierra modal_filtro-->  
+
+
+<!--Loading-->
+
+
+
+ <!--Modal filtrar-->
+
+  <div id="modal_filtro_inspeccion" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+      
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size: 30px;font-weight: bold;"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="gridModalLabel" data-bind='text:titulo'></h4>
+        </div>
+        <div class="modal-body">
+
+          <div class="form-group">
+            <label>Circuito</label>
+
+            <select class="form-control" id="circuito_filtro" name="circuito_filtro" data-bind="value:circuito_filtro">
+              <option value="">[Seleccione...]</option>
+                {% for cont in circuito %}
+                  <option value="{{ cont.id }}">{{ cont.nombre }}</option>
+                {% endfor %}
+            </select>
+
+          </div>
+
+
+          <div class="form-group">
+            <label>Lote</label>
+
+              <select class="form-control" id="lote_filtro" name="lote_filtro" data-bind="value:lote_filtro">
+                <option value="">[Seleccione...]</option>
+                {% for lot in lote %}
+                  <option value="{{ lot.id }}">{{ lot.nombre }}</option>
+                {% endfor %}
+              </select>
+
+          </div>
+
+
+          <div class="form-group">
+            <label>Poligono</label>
+
+              <select class="form-control" id="poligono_filtro" name="poligono_filtro" data-bind="value:poligono_filtro">
+                <option value="">[Seleccione...]</option>
+                {% for pol in poligono %}
+                  <option value="{{ pol.id }}">{{ pol.nombre }}</option>
+                {% endfor %}
+              </select>
+
+          </div>
+
+
+          <div class="form-group">
+            <label>Sector</label>
+
+              <select class="form-control" id="sector_filtro" name="sector_filtro" data-bind="value:sector_filtro">
+                <option value="">[Seleccione...]</option>
+                {% for sect in sector %}
+                  <option value="{{ sect.id }}">{{ sect.nombre }}</option>
+                {% endfor %}
+              </select>
+
+          </div>
+
+
+          <div class="form-group">
+            <label>Apoyo</label>
+
+              <select class="form-control" id="apoyo_filtro" name="apoyo_filtro" data-bind="value:apoyo_filtro">
+                <option value="">[Seleccione...]</option>
+                {% for apoy in apoyo %}
+                  <option value="{{ apoy.id }}">{{ apoy.nombre }}</option>
+                {% endfor %}
+              </select>
+
+          </div>
+
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bind="click:function(){consultar(1);}">
+            <i class="fa fa-search"></i> Filtrar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div><!--cierra modal_filtro-->
+
+<!--Fin del modal-->
+
+  
+{% endblock contenido %}
+
+{% load staticfiles %}
+
+{%block imports %}
+
+  <script src='{% static "js/plugins/accounting/accounting.min.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/plugins/fileInput/fileinput.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/ViewModels/inspeccion/inspeccion.js" %}'></script>
+
+
+  <script type="text/javascript">
+
+    $(document).ready(function () {
+      inspeccion.consultar(1);//iniciamos la primera funcion
+
+    });  
+
+  </script>
+
+{% endblock imports %}
+

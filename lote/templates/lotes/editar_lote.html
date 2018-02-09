@@ -1,0 +1,141 @@
+{% extends 'page.html' %}
+{% load staticfiles %}
+
+{%block imports_css %}
+ <link rel="stylesheet" type="text/css" href='{% static "css/fileInput/fileinput.min.css" %}'>
+    
+    <style type="text/css">
+
+    #rootwizard .nav-pills > li.active > a{
+    background-color: #4a89dc !important;
+    }
+
+    </style>
+
+{% endblock imports_css %}
+
+{% block title %}Actualizar lote{% endblock title%}
+{% block mapa %}
+  <li><a href="/usuario/"><i class="glyphicon glyphicon-home"></i></a></li>
+  <li><a href="{% url 'lote.lote' %}">Listado de lote</a></li>
+  <li class="active">Actualizar lote</li>
+{% endblock mapa %}
+{% block encabezado %}<!--lote-->{% endblock encabezado %}
+{% block opciones_listado %}  {% endblock opciones_listado %} 
+{% block busqueda %} {% endblock busqueda %}  
+
+{% block contenido %}
+
+  <div class="row" ><br><br>
+
+    <div class="col-lg-12">
+
+      <div class="panel" id="spy4">
+
+        <div class="panel-body">
+
+          <div class="row">
+            
+            <!-- ko if: tabIndex()===0 -->
+              <center><h3>Registro de nuevo Lote</h3></center>
+              <center><h4>(Paso 1: Defina el nombre y contratista del lote )</h4></center><br><br>
+
+              <div class="col-lg-6">
+
+                {% include 'lotes/_lote_parcial.html' %}
+
+              </div>
+            <!--/ko -->
+
+            <!-- ko if: tabIndex()===1 -->
+              <center><h3>Registro de nuevo Lote <span data-bind="text:loteVO.nombre"></span></h3></center>
+              <center><h4>(Paso 2: indique el (los) circuitos asociados al lote )</h4></center><br><br>
+
+              <div class="col-lg-6">
+
+                {% include 'lotes/_editar_circuito_lote.html' %}
+
+              </div>
+            <!--/ko -->
+
+
+            <!-- ko if: tabIndex()===2 -->
+              <center><h3>Registro de nuevo Lote <span data-bind="text:loteVO.nombre"></span></h3></center>
+              <center><h4>(Paso 3: indique el (los) barrios/sectores asociados al lote )</h4></center><br><br>
+
+              <div class="col-lg-6">
+
+                {% include 'lotes/_editar_sector_lote.html' %}
+
+              </div>
+            <!--/ko -->
+
+
+            <!-- ko if: tabIndex()===3 -->
+              <center><h3>Registro de nuevo Lote <span data-bind="text:loteVO.nombre"></span></h3></center>
+              <center><h4>(Paso 4: registre los polígonos asociados al lote )</h4></center><br><br>
+
+              <div class="col-lg-6">
+
+                {% include 'lotes/_editar_poligono.html' %}
+
+              </div>
+            <!--/ko -->
+
+
+          </div><!--cierra row-->
+        </div><!--cierra pandel body-->
+
+          <div class="modal-footer">
+
+            <!-- ko if: tabIndex()>0 -->
+              <button type="button" class="btn btn-primary" data-bind="click:atras_vistas_parciales">Atras</button>
+            <!--/ko -->
+
+            <!-- ko if: tabIndex()===0 -->
+              <button type="button" class="btn btn-primary" disabled="disabled">Atras</button>
+            <!--/ko -->
+
+              
+            <button type="button" class="btn btn-primary" data-bind="click:vistas_parciales">
+              <span data-bind="text:nombreBoton"></span>
+            </button>
+              
+          </div><!--Modal footer-->
+
+
+      </div><!--cietta panel-->
+    </div><!--col-lg-12" -->
+  </div><!--cierra row -->
+
+<!--Loading-->
+  
+{% endblock contenido %}
+
+{% load staticfiles %}
+
+{%block imports %}
+
+  <script src='{% static "js/plugins/accounting/accounting.min.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/plugins/fileInput/fileinput.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/ViewModels/lote/editar_lote.js" %}'></script>
+
+
+  <script type="text/javascript">
+
+    $(document).ready(function () {
+       lote.idLote({{id_lote}});
+      lote.consultar_por_id();//iniciamos la primera funcio
+      lote.consultar_circuito_editar();//iniciamos la primera funcion
+      lote.consultar_circuito_asociado_editar();//iniciamos la primera funcion
+      lote.consultar_sector_editar();//iniciamos la primera funcion
+      lote.consultar_sector_asociado_editar();//iniciamos la primera funcion
+      lote.consultar_poligono_asociado_editar();
+      
+
+    });  
+
+  </script>
+
+{% endblock imports %}
+
