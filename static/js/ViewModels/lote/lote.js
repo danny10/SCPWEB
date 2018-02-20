@@ -28,8 +28,14 @@ function LoteViewModel() {
     self.sectores=ko.observable('');
     self.circuitos=ko.observable('');
     self.tabIndex=ko.observable(0);
-    self.nombreBoton=ko.observable('Seguiente');
+    self.nombreBoton=ko.observable('Siguiente');
     self.disable=ko.observable(0);
+    self.ano=ko.observable(new Date().getFullYear());
+    self.mes=ko.observable('');
+    self.numero_inspe=ko.observable('');
+    self.lote_exportar=ko.observable('');
+
+    self.inspeccion_word=ko.observable('');
 
      //Representa un modelo del lote
     self.loteVO={
@@ -46,6 +52,16 @@ function LoteViewModel() {
     self.filtrar_lote = function () {
         self.titulo('Filtrar lote');
         $('#modal_filtro_lote').modal('show');
+    }
+
+
+    //funcion para generar informe de word
+    self.generar_word = function (obj) {
+      self.limpiar_modal_word();
+      self.consultar_inspeccion_validacion(obj.id);
+      self.lote_exportar(obj.id);
+      self.titulo('Generar informe');
+      $('#generar_informe').modal('show');
     }
 
 
@@ -168,6 +184,13 @@ function LoteViewModel() {
         self.checkall5(false);
         self.nombre_poligono('');   
      }
+
+
+    self.limpiar_modal_word=function(){     
+         
+        self.mes('');
+        self.numero_inspe('');
+    }
 
 
     //funcion guardar y actualizar los lote
@@ -325,12 +348,6 @@ function LoteViewModel() {
 
     }
 
-
-    //exportar excel la tabla del listado de los lote
-   self.exportar_excel=function(){
-
-         location.href=path_principal+"/capitulo/exportar_lote/";
-     }
 
 
     //funcion consultar los circuitos
@@ -527,6 +544,7 @@ function LoteViewModel() {
 
                        if (estado=='ok') {
                             self.limpiar();
+                            self.nombreBoton('Siguiente');
                             //location.reload(true);
                             self.tabIndex(0);
                         }                        
@@ -638,9 +656,64 @@ function LoteViewModel() {
             self.disable(1);
 
         }
-        self.nombreBoton('Seguiente');
+        self.nombreBoton('Siguiente');
 
     }
+
+
+     //validacion para cuando genere el archivo word
+    self.consultar_inspeccion_validacion=function(id_lote){
+
+      path =path_principal+'/api/Inspeccion?sin_paginacion';
+      parameter={id_lote:id_lote,activo:true };
+      RequestGet(function (datos, estado, mensaje) {
+           
+        self.inspeccion_word(datos);
+
+      }, path, parameter,undefined,false,false);
+
+    }
+
+
+
+    //exportar excel la tabla del listado de los contratista
+    self.exportar_excel=function(){
+        var ano=self.ano();
+        var mes=self.mes();
+        var inspeccion=self.numero_inspe();
+        var lote_id =self.lote_exportar()
+
+        if(ano=='' || mes=='' || inspeccion==''){
+
+            $.confirm({
+              title:'Informativo',
+              content: '<h4><i class="text-info fa fa-info-circle fa-2x"></i>Debe diligenciar los campos obligatorios.<h4>',
+              cancelButton: 'Cerrar',
+              confirmButton: false
+            });
+
+            return false;
+        }
+
+
+        if( self.inspeccion_word()==''){
+
+            $.confirm({
+              title:'Informativo',
+              content: '<h4><i class="text-info fa fa-info-circle fa-2x"></i>No se encontraron inspecciones registradas en el lote.<h4>',
+              cancelButton: 'Cerrar',
+              confirmButton: false
+            });
+
+            return false;
+        } 
+
+
+        location.href=path_principal+"/lote/ejemplo_word?ano="+ano+"&mes="+mes+"&inspeccion="+inspeccion+"&lote_id="+lote_id;
+
+    }
+
+
 
 }
 

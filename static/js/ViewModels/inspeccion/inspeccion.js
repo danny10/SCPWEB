@@ -7,6 +7,7 @@ function InspeccionViewModel() {
     self.titulo=ko.observable('');
     self.filtro=ko.observable('');
     self.checkall=ko.observable(false);
+    self.lote_consulta=ko.observable('');
 
     self.nombre_circuito=ko.observable('');
     self.nombre_lote=ko.observable('');
@@ -22,20 +23,13 @@ function InspeccionViewModel() {
     self.sector_filtro=ko.observable('');
     self.apoyo_filtro=ko.observable('');
 
+    self.desde_filtro=ko.observable('');
+    self.hasta_filtro=ko.observable('');
+
   
 
-         //funcion para seleccionar los datos a eliminar
-    self.checkall.subscribe(function(value ){
-
-        ko.utils.arrayForEach(self.listado(), function(d) {
-
-            d.procesado(value);
-        }); 
-    });
-
-
      //paginacion de las inpecciones
-     self.paginacion = {
+    self.paginacion = {
         pagina_actual: ko.observable(1),
         total: ko.observable(0),
         maxPaginas: ko.observable(5),
@@ -101,14 +95,16 @@ function InspeccionViewModel() {
 
            self.filtro($('#txtBuscar').val());
            var circuito=self.circuito_filtro()
-           var lote=self.lote_filtro();
            var poligono=self.poligono_filtro();
            var sector=self.sector_filtro();
            var apoyo=self.apoyo_filtro();
+           var desde=self.desde_filtro();
+           var hasta=self.hasta_filtro();
 
            path = path_principal+'/api/Inspeccion?format=json';
             parameter = { dato: self.filtro(), page: pagina,activo:true,
-              id_circuito:circuito,id_lote:lote,id_poligono:poligono,id_sector:sector,id_apoyo:apoyo};
+              id_circuito:circuito,id_lote:self.lote_consulta(),id_poligono:poligono,id_sector:sector,id_apoyo:apoyo,
+                desde:desde,hasta:hasta};
             RequestGet(function (datos, estado, mensage) {
 
                 if (estado == 'ok' && datos.data!=null && datos.data.length > 0) {
@@ -201,11 +197,6 @@ function InspeccionViewModel() {
         }     
 
     }
-
-
-    //exportar excel la tabla del listado de las inspecciones
-   self.exportar_excel=function(){ }
-
 
 
     //trae los datos para la opcion ver mas de la inpeccion

@@ -248,6 +248,52 @@ def login_view(request):
             mensaje = 'Nombre de usuario o clave no valido'
     return render(request, 'usuario/login.html', {'mensaje': mensaje})
 
+
+#Recordar pass
+def sendMail(request):
+	mensaje=''
+	status=''
+	res=''
+	if request.method=='POST':
+		username = request.POST.get('usuario')		
+		try:
+			usuario= Usuario.objects.get(user__username=username)
+			persona = Persona.objects.get(id=usuario.persona.id)
+			#inicio del codigo del envio de correo
+			contenido='<h3>SCP</h3>'
+			contenido = contenido + 'Para reinicio de su clave de acceso a SCP haga click en '
+			contenido = contenido + 'el siguiente enlace: <br/><br/>'
+			contenido = contenido + '<a href="http://'+settings.SERVER+':'+settings.PORT_SERVER+'/usuario/finishResetPass/'+str(usuario.user.id)+'/">'
+			contenido = contenido + '<b>Reiniciar Clave</b></a><br/><br/>'
+			contenido = contenido + 'No responder este mensaje, este correo es de uso informativo exclusivamente,<br/><br/>'
+			contenido = contenido + 'Soporte SCP<br/>soporte@sinin.co'
+			mail = Mensaje(
+				remitente=settings.REMITENTE,
+				destinatario=persona.correo,
+				asunto='Reinicio de clave de acceso a SCP',
+				contenido=contenido,
+				appLabel='Usuario',
+				)			
+			mail.save()
+			res=sendAsyncMail.delay(mail)
+			mensaje='Se ha enviado un correo a ' + persona.correo + ' para iniciar el proceso de recuperacion de clave de acceso al sistema.'
+			status='ok'			
+			# if mail.simpleSend()==1:
+			# 	mensaje='Se ha enviado un correo a ' + persona.correo + ' para iniciar el proceso de recuperacion de clave de acceso al sistema.'
+			# 	status='ok'
+			# else:
+			# 	mensaje = 'Error al enviar el correo'
+			# 	status='error'
+			#fin del envio de correo
+
+		except Usuario.DoesNotExist:
+			mensaje='El usuario ' + str(username) + ' No se encuentra registrado en el sistema'
+			status='error'
+			return Response({'message':mensaje,'success':status,'data':''},status=status.HTTP_400_BAD_REQUEST)
+
+			
+	return render(request,'usuario/resetPass.html',{'mensaje': mensaje, 'status':status})
+
 @login_required
 def index_view(request):
 	
@@ -260,7 +306,11 @@ def logout_view(request):
 
 @login_required
 def cambiar_usuario(request):	
-	return render(request,'usuario/passChange.html') 	      
+	return render(request,'usuario/passChange.html')
+
+
+def recordar_pass(request):
+	return render(request,'usuario/resetPass.html') 	      
 
 
 @api_view(['POST'])

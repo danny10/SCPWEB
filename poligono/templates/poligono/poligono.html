@@ -14,6 +14,22 @@
 {% endblock mapa %}
 {% block encabezado %}<!--contratista-->{% endblock encabezado %}
 
+    {% block opciones_listado %}     
+        <li>
+          <a href="#" data-bind="click:abrir_modal" data-placement="right"  data-toggle="tooltip" data-original-title="Agregar nuevo registro">
+            <i class="fa fa-plus" style="font-size: 20px;"></i>
+          </a>
+        </li>
+
+        <li>
+          <a href="#" data-bind="click:eliminar" data-placement="right" data-toggle="tooltip" data-original-title="Eliminar registro(s)">
+            <i class="fa fa-trash" style="font-size: 20px;"></i>
+          </a>
+        </li>
+
+    {% endblock opciones_listado %}   
+
+
 {% block contenido %}
 
   <div class="row" ><br><br>
@@ -24,7 +40,7 @@
 
           <div class="panel" id="spy4">
             <div class="panel-heading">
-              <span class="panel-title"></span><span>Listado de poligonos del lote</span>
+              <span class="panel-title"></span><span>Listado de poligonos</span>
 
               <span data-bind="text:'- N° de Registos: ' + paginacion.totalRegistrosBuscados() + ' de ' + paginacion.total()"></span>
 

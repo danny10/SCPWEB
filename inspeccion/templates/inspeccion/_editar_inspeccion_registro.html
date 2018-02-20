@@ -2,8 +2,8 @@
             <label>Circuito (*)</label>
             <select class="form-control" data-bind="value:inspeccionVO.circuito_id">
                 <option value="">[Seleccione..]</option>
-                {% for item in circuito %}
-                  <option value="{{ item.id }}">{{ item.nombre }}</option>
+                {% for item in circuitos %}
+                  <option value="{{ item.circuito.id }}">{{ item.circuito.nombre }}</option>
                 {% endfor %}
             </select>
           </div>
@@ -14,7 +14,7 @@
             <select class="form-control" data-bind="value:inspeccionVO.poligono_id">
                 <option value="">[Seleccione..]</option>
                 {% for item2 in poligono %}
-                  <option value="{{ item2.id }}">{{ item2.nombre }}</option>
+                  <option value="{{ item2.poligono.id }}">{{ item2.poligono.nombre }}</option>
                 {% endfor %}
             </select>
           </div>
@@ -25,7 +25,7 @@
             <select class="form-control" data-bind="value:inspeccionVO.sector_id">
                 <option value="">[Seleccione..]</option>
                 {% for item3 in sector %}
-                  <option value="{{ item3.id }}">{{ item3.nombre }}</option>
+                  <option value="{{ item3.sector.id }}">{{ item3.sector.nombre }}</option>
                 {% endfor %}
             </select>
           </div>

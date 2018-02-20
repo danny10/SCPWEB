@@ -3,6 +3,7 @@
 
 {%block imports_css %}
  <link rel="stylesheet" type="text/css" href='{% static "css/fileInput/fileinput.min.css" %}'>
+ <link rel="stylesheet" type="text/css" href='{% static "js/plugins/datepicker/css/bootstrap-datetimepicker.css" %}'>
     
     <style type="text/css">
 
@@ -44,14 +45,20 @@
   <div class="row" ><br><br>
 
     <div class="col-lg-12">
+
+        <strong>Lote : </strong><span>{{encabezado.nombre}}</span><br>
+        <strong>Contratista : </strong><span>{{encabezado.contratista.nombre}}</span><br>
+        <strong>Provincia : </strong><span>{{encabezado.provincia.nombre}}</span><br>
+        <strong>Sucursal : </strong><span>{{encabezado.sucursal.nombre}}</span><br><br>
   
         <div class="row">
 
           <div class="panel" id="spy4">
             <div class="panel-heading">
-              <span class="panel-title"></span><span>Listado de inspecciones del lote</span>
+              <!--<span class="panel-title"></span><span>Listado de inspecciones del lote {{encabezado.nombre}}</span>-->
+              <span class="panel-title"></span><span>Lista de inspeccion</span>
 
-              <span data-bind="text:'- N° de Registos: ' + paginacion.totalRegistrosBuscados() + ' de ' + paginacion.total()"></span>
+              <span data-bind="text:'-N° de Registos:' + paginacion.totalRegistrosBuscados() + ' de ' + paginacion.total()"></span>
 
               <span class="panel-controls">
                 <a  data-placement="top"  data-toggle="tooltip" title="" data-original-title="Filtrar inspeccion" data-bind="click:filtrar_inspeccion" data-toggle="modal" style="cursor:pointer;">
@@ -100,7 +107,7 @@
                       <td data-bind="text: item.ano_inspeccion"></td>
                       <td data-bind="text: item.mes_inspeccion"></td>
                       <td data-bind="text: item.numero_inspeccion"></td>
-                      <td></td>
+                      <td data-bind="text: item.contador_cierre"></td>
                       <td>
                         
                         <div class="btn-group text-right">
@@ -116,10 +123,19 @@
                             </li>
 
                             <li>
-                              <a href="#" data-bind="attr:{href:'../../actualizar_inspeccion/' + item.id}">
+                              <a href="#" data-bind="attr:{href:'../../actualizar_inspeccion/' + item.id +'/'+item.lote.id}">
                                 Editar
                               </a>
                             </li>
+
+                            <!--ko if: item.contador_cierre!=0 -->
+                            <li>
+                              <a href="#" data-bind="attr:{href:'../../cerrar_pnc/' + item.id +'/'+item.lote.id}">
+                                Cerrar PNC
+                              </a>
+                            </li>
+                            <!--/ko -->  
+
 
                           </ul>
                         </div>
@@ -157,33 +173,30 @@
   </div><!--cierra row -->
 
 
-
+  <!--Modal del ver mas de la inspeccion-->
   <div id="vermas_inspeccion" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
       
-        <div class="modal-dialog">
-          <div class="modal-content">
-              <div class="modal-header">
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size: 30px;font-weight: bold;"><span aria-hidden="true">&times;</span></button>
-                  <h4 class="modal-title" id="gridModalLabel" data-bind='text:titulo'></h4>
-              </div>
-              <div class="modal-body">
-
-                <strong>Nombre circuito : </strong><span data-bind="text:nombre_circuito"></span><br>  
-                <strong>Numero lote : </strong><span data-bind="text:nombre_lote"></span><br>
-                <strong>Nombre poligono : </strong><span data-bind="text:nombre_poligono"></span><br>
-                <strong>Nombre secotr : </strong><span data-bind="text:nombre_sector"></span><br>
-                <strong>Nombre apoyo : </strong><span data-bind="text:nombre_apoyo"></span><br>
-                <strong>Fecha : </strong><span data-bind="text:fecha_inspeccion"></span><br>
-                <strong>Numero inspeccion : </strong><span data-bind="text:inspeccion_numero"></span><br>
-
-              </div>
-          </div>
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="font-size: 30px;font-weight: bold;"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="gridModalLabel" data-bind='text:titulo'></h4>
         </div>
-      </div><!--cierra modal_filtro-->  
+        <div class="modal-body">
 
+          <strong>Nombre circuito : </strong><span data-bind="text:nombre_circuito"></span><br>  
+          <strong>Numero lote : </strong><span data-bind="text:nombre_lote"></span><br>
+          <strong>Nombre poligono : </strong><span data-bind="text:nombre_poligono"></span><br>
+          <strong>Nombre secotr : </strong><span data-bind="text:nombre_sector"></span><br>
+          <strong>Nombre apoyo : </strong><span data-bind="text:nombre_apoyo"></span><br>
+          <strong>Fecha : </strong><span data-bind="text:fecha_inspeccion"></span><br>
+          <strong>Numero inspeccion : </strong><span data-bind="text:inspeccion_numero"></span><br>
 
-<!--Loading-->
-
+        </div>
+    </div>
+  </div>
+</div><!--cierra-->  
+<!--Cierra Modal del ver mas de la inspeccion-->
 
 
  <!--Modal filtrar-->
@@ -204,22 +217,9 @@
             <select class="form-control" id="circuito_filtro" name="circuito_filtro" data-bind="value:circuito_filtro">
               <option value="">[Seleccione...]</option>
                 {% for cont in circuito %}
-                  <option value="{{ cont.id }}">{{ cont.nombre }}</option>
+                  <option value="{{ cont.circuito.id }}">{{ cont.circuito.nombre }}</option>
                 {% endfor %}
             </select>
-
-          </div>
-
-
-          <div class="form-group">
-            <label>Lote</label>
-
-              <select class="form-control" id="lote_filtro" name="lote_filtro" data-bind="value:lote_filtro">
-                <option value="">[Seleccione...]</option>
-                {% for lot in lote %}
-                  <option value="{{ lot.id }}">{{ lot.nombre }}</option>
-                {% endfor %}
-              </select>
 
           </div>
 
@@ -230,7 +230,7 @@
               <select class="form-control" id="poligono_filtro" name="poligono_filtro" data-bind="value:poligono_filtro">
                 <option value="">[Seleccione...]</option>
                 {% for pol in poligono %}
-                  <option value="{{ pol.id }}">{{ pol.nombre }}</option>
+                  <option value="{{ pol.poligono.id }}">{{ pol.poligono.nombre }}</option>
                 {% endfor %}
               </select>
 
@@ -243,7 +243,7 @@
               <select class="form-control" id="sector_filtro" name="sector_filtro" data-bind="value:sector_filtro">
                 <option value="">[Seleccione...]</option>
                 {% for sect in sector %}
-                  <option value="{{ sect.id }}">{{ sect.nombre }}</option>
+                  <option value="{{ sect.sector.id }}">{{ sect.sector.nombre }}</option>
                 {% endfor %}
               </select>
 
@@ -256,12 +256,35 @@
               <select class="form-control" id="apoyo_filtro" name="apoyo_filtro" data-bind="value:apoyo_filtro">
                 <option value="">[Seleccione...]</option>
                 {% for apoy in apoyo %}
-                  <option value="{{ apoy.id }}">{{ apoy.nombre }}</option>
+                  <option value="{{ apoy.apoyo.id }}">{{ apoy.apoyo.nombre }}</option>
                 {% endfor %}
               </select>
 
           </div>
 
+
+          <div class="form-group">
+            <label>Desde</label>
+            <div class="input-group date">
+
+              <input class="form-control" id="desde_filtro" name="desde_filtro" type="text" placeholder="Seleccione la fecha" data-bind="value:desde_filtro,datePicker:desde_filtro" onkeypress="return false">
+              <label for="fecha_desde" class="input-group-addon cursor"><i class="fa fa-calendar"></i>
+              </label>
+
+            </div>   
+          </div>
+
+
+          <div class="form-group">
+            <label>Hasta</label>
+            <div class="input-group date">
+
+              <input class="form-control" id="hasta_filtro" name="hasta_filtro" type="text" placeholder="Seleccione la fecha" data-bind="value:hasta_filtro,datePicker:hasta_filtro" onkeypress="return false">
+              <label for="fecha_hasta" class="input-group-addon cursor"><i class="fa fa-calendar"></i>
+              </label>
+
+            </div>   
+          </div>  
 
         </div>
 
@@ -275,7 +298,7 @@
     </div>
   </div><!--cierra modal_filtro-->
 
-<!--Fin del modal-->
+<!--Fin del modal del filtro-->
 
   
 {% endblock contenido %}
@@ -284,14 +307,18 @@
 
 {%block imports %}
 
+  <script src='{% static "js/plugins/globalize/globalize.min.js" %}'></script>
+  <script src='{% static "js/plugins/moment/moment.min.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/plugins/datepicker/js/bootstrap-datetimepicker.js" %}'></script>
+
   <script src='{% static "js/plugins/accounting/accounting.min.js" %}'></script>
   <script type="text/javascript" src='{% static "js/plugins/fileInput/fileinput.js" %}'></script>
   <script type="text/javascript" src='{% static "js/ViewModels/inspeccion/inspeccion.js" %}'></script>
 
-
   <script type="text/javascript">
 
     $(document).ready(function () {
+      inspeccion.lote_consulta({{id_lote}})
       inspeccion.consultar(1);//iniciamos la primera funcion
 
     });  

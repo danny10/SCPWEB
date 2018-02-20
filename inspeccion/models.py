@@ -7,7 +7,7 @@ from apoyo.models import Apoyo
 from usuario.models import Usuario
 from capitulo.models import CapituloFalla
 from simple_history.models import HistoricalRecords
-#from SCPWEB.functions import functions
+from SCPWEB.functions import functions,RandomFileName
 
 class AInspeccion(models.Model):
 	
@@ -32,9 +32,20 @@ class AInspeccion(models.Model):
 		mes=meses[int(self.fecha.month)-1]
 		return mes
 
-	# def fallas(self):
-	# 	return BFallaInspeccion.objects.filter(inspeccion__id=self.id)	
+	def contador_cierre(self):
+		count=0
+		# print 'id-falla>>>'
+		# print self.id
+		falla=BFallaInspeccion.objects.filter(inspeccion__id=self.id)
 
+		for item in list(falla):
+			cierre=CCierreFallaInspeccion.objects.filter(falla_inspeccion__id=item.id).count()
+			count =count + cierre
+		
+		valor=len(falla)-count
+		# print 'valor>>>>'
+		# print valor
+		return valor
 
 	class Meta:
 		db_table = "inspeccion_inspeccion"
@@ -65,7 +76,8 @@ class CCierreFallaInspeccion(models.Model):
 	fecha = models.DateField(null=True,blank=True)
 	observaciones = models.TextField(null=True,blank=True)
 	falla_inspeccion=models.ForeignKey(BFallaInspeccion,related_name="cierre_falla_inspeccion",on_delete=models.PROTECT)
-	soporte=models.FileField(upload_to='cierre_falla_inspeccion/soporte',blank=True, null=True)
+	#soporte=models.FileField(upload_to='cierre_falla_inspeccion/soporte',blank=True, null=True)
+	soporte=models.FileField(upload_to=RandomFileName('cierre_falla_inspeccion/soporte'),blank=True, null=True)
 	history = HistoricalRecords()
 	#soporte=models.FileField(upload_to=functions.path_and_rename('cierre_falla_inspeccion/soporte','plz'),blank=True, null=True)
 
@@ -80,9 +92,10 @@ class CCierreFallaInspeccion(models.Model):
 class FotoFallaInspeccion(models.Model):
 	
 	falla_inspeccion=models.ForeignKey(BFallaInspeccion,related_name="foto_falla_inspeccion",on_delete=models.PROTECT)
-	soporte=models.FileField(upload_to='foto_falla_inspeccion/soporte',blank=True, null=True)
+	#soporte=models.FileField(upload_to='foto_falla_inspeccion/soporte',blank=True, null=True)
+	#soporte= models.FileField(upload_to = 'foto_falla_inspeccion/soporte', blank=True, null=True)
 	history = HistoricalRecords()
-	#soporte=models.FileField(upload_to=functions.path_and_rename('cierre_falla_inspeccion/soporte','plz'),blank=True, null=True)
+	soporte=models.FileField(upload_to=RandomFileName('cierre_falla_inspeccion/soporte'),blank=True, null=True)
 
 	class Meta:
 		db_table = "inspeccion__foto_falla_inspeccion" 

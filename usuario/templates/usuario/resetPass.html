@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Ingreso al sistema</title>
+	<title>Olvide mi contraseña</title>
     <meta name="keywords" content="HTML5 Bootstrap 3 Admin Template UI Theme" />
 	<meta name="description" content="AdminDesigns - A Responsive HTML5 Admin UI Framework">
 	<meta name="author" content="AdminDesigns">
@@ -45,23 +45,27 @@
             <div class="panel-heading heading-border bg-white">
 	            <div class="row">
 	            	<div class="col-lg-3">
-	            		 <a href="#" title="Login">
-			               <!--  <img src="{% static 'assets/img/logo.png' %}" title="AdminDesigns Logo" class="img-responsive w250"> -->
-			              </a>	
+
 	            	</div>
 	            	<div class="col-lg-6">
-	            		 <h4 class="text-center" style="margin-bottom: 25px;">Ingreso al sistema SCP</h4>
+	            		 <h4 class="text-center" style="margin-bottom: 25px;">Sistema de recuperacion de contraseña para SCP</h4>
 	            	</div>
 	            </div>     
             </div>
 
             <!-- end .form-header section -->
-            <form action="#" class="form-horizontal" style="margin-bottom: 0px !important;" method="post">
+            <form action="{% url 'usuario.sendMail' %}" class="form-horizontal" style="margin-bottom: 0px !important;" method="post">
                             {% csrf_token %}
-                            {% if mensaje %}
-                                <div class="alert alert-danger">
-                                    <i class="fa fa-warning"></i>
-                                        {{ mensaje }}
+                            {% if mensaje  %}
+                                
+                                  {% if status == 'ok' %}
+                                    <div class="alert alert-success">
+                                      <i class="fa fa-info-circle fa-2x"></i>    
+                                  {% else %}
+                                    <div class="alert alert-danger">
+                                      <i class="fa fa-warning fa-2x"></i>  
+                                  {% endif %}
+                                {{ mensaje }}
                                 </div>
                             {% endif %}
               <div class="panel-body bg-light p30">
@@ -71,32 +75,21 @@
                     <div class="section">
                       <label for="username" class="field-label text-muted fs18 mb10">Nombre de Usuario</label>
                       <label for="username" class="field prepend-icon">
-                        <input type="text" name="usuario" id="usuario" class="gui-input" placeholder="Nombre de usuario">
+                        <input type="text" name="usuario" id="usuario" class="gui-input" placeholder="Nombre de usuario" required>
                         <label for="username" class="field-icon">
                           <i class="fa fa-user"></i>
                         </label>
                       </label>
+                      <input type="hidden" value="1" id="resetPassword">
                     </div>
-                    <!-- end section -->
-
-                    <div class="section">
-                      <label for="username" class="field-label text-muted fs18 mb10">Contraseña</label>
-                      <label for="password" class="field prepend-icon">
-                        <input type="password" name="password" id="password" class="gui-input" placeholder="Clave">
-                        <label for="password" class="field-icon">
-                          <i class="fa fa-lock"></i>
-                        </label>
-                      </label>
-                    </div>
-                    <!-- end section -->
 
                   </div>
                 </div>
               </div>
               <!-- end .form-body section -->
               <div class="panel-footer clearfix p10 ph15">
-                <button type="submit" class="button btn-primary mr10 pull-right">Ingresar</button>
-                <a href="{% url 'usuario.recordar_pass' %}" class="theme-link">Olvide mi contraseña</a>
+                <button type="submit" class="button btn-primary mr10 pull-right">Enviar</button>
+                 <a href="{% url 'usuario.login' %}" class="theme-link">Ingreso a SCP</a>
               </div>
               <!-- end .form-footer section -->
             </form>

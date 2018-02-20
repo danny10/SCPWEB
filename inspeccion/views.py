@@ -12,7 +12,7 @@ import json
 from .models import AInspeccion,CCierreFallaInspeccion,BFallaInspeccion,FotoFallaInspeccion
 from circuito.models import Circuito
 from circuito.views import CircuitoSerializer
-from lote.models import Lote
+from lote.models import Lote,LoteCircuito,LoteSector,LotePoligono
 from lote.views import LoteSerializer
 from poligono.models import Poligono
 from lote.views import PoligonoSerializer
@@ -29,6 +29,7 @@ from django.db import transaction,connection
 from django.db.models.deletion import ProtectedError
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view, throttle_classes
+from datetime import date
 
 
 #Api para las inspecciones
@@ -55,7 +56,7 @@ class InspeccionSerializer(serializers.HyperlinkedModelSerializer):
 	class Meta:
 		model = AInspeccion
 		fields=('id','circuito','circuito_id','lote','lote_id','poligono','poligono_id','sector',
-			'sector_id','apoyo','apoyo_id','usuario','usuario_id','fecha','activo','numero_inspeccion','ano_inspeccion','mes_inspeccion')
+			'sector_id','apoyo','apoyo_id','usuario','usuario_id','fecha','activo','numero_inspeccion','ano_inspeccion','mes_inspeccion','contador_cierre')
 
 
 class InspeccionViewSet(viewsets.ModelViewSet):
@@ -85,10 +86,22 @@ class InspeccionViewSet(viewsets.ModelViewSet):
 			apoyo= self.request.query_params.get('id_apoyo',None)
 			activo= self.request.query_params.get('activo',None)
 			id_inspeccion= self.request.query_params.get('id_inspeccion',None)
+			no_inspeccion= self.request.query_params.get('no_inspeccion',None)
 			sin_paginacion=self.request.query_params.get('sin_paginacion',None)
+			fecha= self.request.query_params.get('fecha',None)
+			desde= self.request.query_params.get('desde',None)
+			hasta= self.request.query_params.get('hasta',None)
 			qset=''
+			
+			if fecha:
+				f= fecha.split('-')
 
-			if (dato or circuito or lote or poligono or sector or apoyo or activo):
+			# print lote
+			# print f[0]
+			# print f[1]
+
+
+			if (dato or circuito or lote or poligono or sector or apoyo or activo or id_inspeccion or fecha or no_inspeccion or desde or hasta):
 
 				qset = Q(activo=activo)
 
@@ -98,10 +111,15 @@ class InspeccionViewSet(viewsets.ModelViewSet):
 					)
 
 
-
 				if id_inspeccion:
 					qset = qset &(
 						Q(id=id_inspeccion)
+					)
+
+
+				if no_inspeccion:
+					qset = qset &(
+						Q(numero_inspeccion=no_inspeccion)
 					)
 
 
@@ -132,6 +150,23 @@ class InspeccionViewSet(viewsets.ModelViewSet):
 					qset = qset &(
 						Q(apoyo__id=apoyo)
 					)
+
+
+				if fecha:
+					qset =  qset &(Q(fecha__year=f[0]))
+
+
+				if fecha:
+					qset =  qset &(Q(fecha__month=f[1]))
+
+
+				if (desde and (hasta is not None)):
+
+					qset = qset & (Q(fecha__gte=desde))
+
+				if(desde and hasta):
+					qset = qset &(Q(fecha__gte=desde) and Q(fecha__lte=hasta))
+					
 
 			#print qset
 			if qset != '':
@@ -544,7 +579,7 @@ class CierreFallaInspeccionViewSet(viewsets.ModelViewSet):
 #Api para las fotos fallas inspecciones
 class FotoFallaInspeccionSerializer(serializers.HyperlinkedModelSerializer):
 
-	falla_inspeccion_id = serializers.PrimaryKeyRelatedField(write_only=True,queryset=CCierreFallaInspeccion.objects.all())
+	falla_inspeccion_id = serializers.PrimaryKeyRelatedField(write_only=True,queryset=BFallaInspeccion.objects.all())
 	falla_inspeccion=FallaInspeccionSerializer(read_only=True)
 
 	class Meta:
@@ -578,17 +613,17 @@ class FotoFallaInspeccionViewSet(viewsets.ModelViewSet):
 
 			if (dato or falla_inspeccion):
 
-				#qset = Q(capitulo=capitulo)
+				qset = Q(falla_inspeccion__id=falla_inspeccion)
 
 				if dato:
 					qset = qset &(
 						Q(observaciones__icontains=dato)
 					)
 
-				if falla_inspeccion:
-					qset = qset &(
-						Q(falla_inspeccion__id=falla_inspeccion)
-					)
+				# if falla_inspeccion:
+				# 	qset = qset &(
+				# 		Q(falla_inspeccion__id=falla_inspeccion)
+				# 	)
 
 			#print qset
 			if qset != '':
@@ -623,20 +658,13 @@ class FotoFallaInspeccionViewSet(viewsets.ModelViewSet):
 			sid = transaction.savepoint()
 
 			try:
-				serializer = CierreFallaInspeccionSerializer(data=request.DATA,context={'request': request})
+				serializer = FotoFallaInspeccionSerializer(data=request.DATA,context={'request': request})
 
 				if serializer.is_valid():
 
-					if self.request.FILES.get('soporte') is not None:
+					serializer.save(soporte=self.request.FILES.get('soporte'),falla_inspeccion_id=request.DATA['falla_inspeccion_id'])
 
-						serializer.save(soporte=self.request.FILES.get('soporte'),falla_inspeccion_id=request.DATA['falla_inspeccion_id'])
-
-						transaction.savepoint_commit(sid)
-
-					else:
-						serializer.save(soporte='',falla_inspeccion_id=request.DATA['falla_inspeccion_id'])
-
-						transaction.savepoint_commit(sid)
+					transaction.savepoint_commit(sid)
 
 					return Response({'message':'El registro ha sido guardado exitosamente','success':'ok',
 						'data':serializer.data},status=status.HTTP_201_CREATED)
@@ -646,7 +674,7 @@ class FotoFallaInspeccionViewSet(viewsets.ModelViewSet):
 					'data':''},status=status.HTTP_400_BAD_REQUEST)
 
 			except Exception,e:
-				#print e
+				print e
 				transaction.savepoint_rollback(sid)
 				return Response({'message':'Se presentaron errores al procesar los datos','success':'error',
 					'data':''},status=status.HTTP_400_BAD_REQUEST)	
@@ -700,7 +728,7 @@ class FotoFallaInspeccionViewSet(viewsets.ModelViewSet):
 #Fin api  para las fotos fallas inspecciones.
 
 
-#guardar 
+#guardar las inspecciones
 @api_view(['POST'])
 @transaction.atomic
 def GuardarInspeccion(request):
@@ -736,20 +764,28 @@ def GuardarInspeccion(request):
 					# print falla['observaciones']
 					# print falla['calificacion']
 
+					#if falla['observaciones'] and falla['calificacion']:
+
+					if falla['calificacion']:
+
+						calificacion=falla['calificacion']
+
+					else:
+
+						calificacion=None
+
 					falla_inspeccion=BFallaInspeccion(inspeccion_id=inspeccion.id,capitulo_falla_id=falla['capitulo_falla_id'],
-						observaciones=falla['observaciones'],calificacion=falla['calificacion'])
+							observaciones=falla['observaciones'],calificacion=calificacion)
 					falla_inspeccion.save()
 
-					print '---------'
-					print request.FILES['soporte_{}[]'.format(falla['capitulo_falla_id'])]
+					# print '---------'
+					# print request.FILES['soporte_{}[]'.format(falla['capitulo_falla_id'])]
 					for soporte in request.FILES.getlist('soporte_{}[]'.format(falla['capitulo_falla_id'])):
-						print soporte
+
 						foto=FotoFallaInspeccion(
 								soporte=soporte, 
 								falla_inspeccion_id=falla_inspeccion.id)
 						foto.save()
-
-
 
 
 			return JsonResponse({'message':'El registro se ha guardado correctamente','success':'ok',
@@ -793,93 +829,16 @@ def InspeccionInactiva(request):
 			'data':''})
 
 
-@login_required
-def Inspeccion(request,id_lote=None):
-
-	qsCircuito=Circuito.objects.filter(activo=True)
-	qsLote=Lote.objects.filter(activo=True)
-	qsApoyo=Apoyo.objects.all()
-	qsPoligono=Poligono.objects.filter(activo=True)
-	qsSector=Sector.objects.filter(activo=True)
-	
-	return render_to_response('inspeccion/inspeccion.html',{'circuito':qsCircuito,'lote':qsLote,'apoyo':qsApoyo,'poligono':qsPoligono,'sector':qsSector,'app':'inspeccion','model':'AInspeccion','id_lote':id_lote},context_instance=RequestContext(request))
 
 
-@login_required
-def FallaInspeccion(request):
-	
-	return render_to_response('inspeccion/falla_inspeccion.html',{'app':'inspeccion','model':'BFallaInspeccion'},context_instance=RequestContext(request))
-
-
-@login_required
-def CierreFallaInspeccion(request):
-	
-	return render_to_response('inspeccion/cierre_falla_inspeccion.html',{'app':'inspeccion','model':'CCierreFallaInspeccion'},context_instance=RequestContext(request))
-
-
-@login_required
-def FotoFallaInspeccion2(request):
-	
-	return render_to_response('inspeccion/foto_falla_inspeccion.html',{'app':'inspeccion','model':'FotoFallaInspeccion'},context_instance=RequestContext(request))
-
-
-
-#registrar el lote
-@login_required
-def RegistroInspeccion(request,id_lote=None):
-
-	qsCircuito=Circuito.objects.filter(activo=True)
-	qsPoligono=Poligono.objects.filter(activo=True)
-	qsSector=Sector.objects.filter(activo=True)
-	#qsApoyo=Apoyo.objects.all()
-
-	listado_capitulo_falla=[]
-
-	qsCapitulo=Capitulo.objects.all()
-	# qsCapituloFalla=CapituloFalla.objects.all()
-
-
-	# for item in list(qsCapitulo):
-
-	# 	capitulo_falla = CapituloFalla.objects.filter(capitulo__id=item.id)
-
-	# 	for item2 in list(capitulo_falla):
-
-	# 		listado_capitulo_falla.append(
-	# 			{
-	# 				'id_capitulo':item2.capitulo.id,
-	# 				'nombre_capitulo':item2.capitulo.nombre,
-	# 				'id_capitulo_falla':item2.id,
-	# 				'descripcion_capitulo_falla':item2.descripcion
-	# 			}
-	# 		)
-
-
-	
-	return render_to_response('inspeccion/registro_inspeccion.html',{'lista_d_capitulo':listado_capitulo_falla,'capitulo':qsCapitulo,'circuito':qsCircuito,'poligono':qsPoligono,'sector':qsSector,'app':'lote','model':'Lote','id_lote':id_lote},context_instance=RequestContext(request))
-
-
-@login_required
-def ActualizarInspeccion(request,id_inspeccion=None):
-
-	qsCircuito=Circuito.objects.filter(activo=True)
-	qsPoligono=Poligono.objects.filter(activo=True)
-	qsSector=Sector.objects.filter(activo=True)
-
-	listado_capitulo_falla=[]
-
-	qsCapitulo=Capitulo.objects.all()
-	
-	return render_to_response('inspeccion/editar_inspeccion.html',{'lista_d_capitulo':listado_capitulo_falla,'capitulo':qsCapitulo,'circuito':qsCircuito,'poligono':qsPoligono,'sector':qsSector,'app':'lote','model':'Lote','id_inspeccion':id_inspeccion},context_instance=RequestContext(request))
-
-
+#Traer las inspecciones
 @api_view(['GET'])
 def ObtnerInspeccion(request):
 	if request.method == 'GET':
 		try:
 
-			print request.GET['id_inspeccion']
-			print '---'
+			# print request.GET['id_inspeccion']
+			# print '---'
 
 			id_inspeccion= request.GET['id_inspeccion']
 
@@ -893,11 +852,14 @@ def ObtnerInspeccion(request):
 				
 				listFallas=[]
 				for fall in list(cap.fallas()):
+
 					fallaInspeccion = BFallaInspeccion.objects.filter(capitulo_falla__id=fall.id, inspeccion__id=id_inspeccion).first()
-					if fallaInspeccion:						
+					if fallaInspeccion:
+
 						listFallas.append({							
 								'capitulo_falla_id':fall.id,
 								'descripcion':fall.descripcion,
+								'orden':fall.orden,
 								'calificacion':str(fallaInspeccion.calificacion),
 								'observaciones':fallaInspeccion.observaciones,
 								# 'soportes':soportes,
@@ -922,49 +884,15 @@ def ObtnerInspeccion(request):
 				'numero_inspeccion':inspeccion.numero_inspeccion,
 				'capitulos' : listCapitulos
 			}	
-				
-			# for item in list(fallas):				
-			# 	soportes = FotoFallaInspeccion.objects.filter(falla_inspeccion__id=item.id)
-			# 	listSoportes = []
-			# 	for sop in list(soportes):					
-			# 		listSoportes.append({
-			# 			'id': sop.id,
-			# 			'falla_inspeccion_id': sop.falla_inspeccion.id,
-			# 			'soporte': sop.soporte,
-			# 			})
-
-				
-
-			# 	for cap in list(capitulos):
-			# 		listFallas = []
-			# 		fallas = CapituloFalla.objects.filter(capitulo__id=cap.id)
-
-			# 		for f in list(fallas):
-			# 			listFallas.append({
-			# 			'id':item.id,
-			# 			'inspeccion_id':item.inspeccion.id,
-			# 			'capitulo_falla_id':item.capitulo_falla.id,
-			# 			'observaciones':item.observaciones,
-			# 			'calificacion':item.calificacion,
-			# 			'soportes':listSoportes
-			# 		})
-
-			# 		listCapitulos.append({
-			# 			'id' : cap.id,
-			# 			'nombre' : cap.nombre,
-			# 			'fallas' : listFallas
-			# 		})	
-					
-				
+								
 			return JsonResponse({'message':'','success':'ok','data':data})			
 
 		except Exception as e:
-			print e
-			raise e
+			return JsonResponse({'message':'Se presentaron errores al procesar la solicitud','success':'error','data':''})
 
 
 
-#guardar 
+#actualizar las inspecciones 
 @api_view(['POST'])
 @transaction.atomic
 def ActualizacionInspeccion(request):
@@ -974,16 +902,6 @@ def ActualizacionInspeccion(request):
 		try:
 			
 			data=json.loads(request.DATA['lista'])
-
-			#print data['id']
-			# print data['circuito_id']
-			# print data['poligono_id']
-			# print data['lote_id']
-			# print data['fecha']
-			# print data['apoyo_id']
-			# print data['sector_id']
-			# print data['numero_inspeccion']
-			# print request.user.usuario.id
 
 			object_inspeccion=AInspeccion.objects.get(pk=data['id'])
 			object_inspeccion.circuito_id=data['circuito_id']
@@ -1000,17 +918,20 @@ def ActualizacionInspeccion(request):
 
 				for falla in item['fallas']:
 
-					print'--------------------'
-					#print inspeccion.id
-					print falla['capitulo_falla_id']
-					print falla['observaciones']
-					print falla['calificacion']
+					if falla['calificacion'] =='None':
+		
+						calificacion=None
 
-					# falla_inspeccion=BFallaInspeccion(inspeccion_id=inspeccion.id,capitulo_falla_id=falla['capitulo_falla_id'],
-					# 	observaciones=falla['observaciones'],calificacion=falla['calificacion'])
-					# falla_inspeccion.save()
+					else:
+
+						calificacion=falla['calificacion']
 
 
+					object_falla_inspeccion=BFallaInspeccion.objects.get(inspeccion__id=data['id'],capitulo_falla__id=falla['capitulo_falla_id'])
+					object_falla_inspeccion.observaciones=falla['observaciones']
+					object_falla_inspeccion.calificacion=calificacion
+
+					object_falla_inspeccion.save()
 
 			return JsonResponse({'message':'El registro se ha guardado correctamente','success':'ok',
 					'data':''})
@@ -1020,3 +941,290 @@ def ActualizacionInspeccion(request):
 			transaction.savepoint_rollback(sid)
 			return JsonResponse({'message':'Se presentaron errores al procesar la solicitud','success':'error',
 				'data':''})
+
+
+
+
+#consultar los soportes para editar
+@api_view(['GET'])
+def consulta_listado_soporte_editar(request):
+
+	if request.method == 'GET':
+
+		try:
+			qset=''
+			capitulo_falla_id= request.GET['capitulo_falla_id']
+			inspeccion_id= request.GET['inspeccion_id']
+
+			qset = Q(inspeccion__id=inspeccion_id)
+
+			if capitulo_falla_id:
+					qset =  qset &(Q(capitulo_falla__id=capitulo_falla_id))
+
+			falla = BFallaInspeccion.objects.filter(qset).first()
+
+			#print falla.id
+
+			# lista= FotoFallaInspeccion.objects.filter(falla_inspeccion__id=falla.id)
+
+			# lista_soporte=[]
+
+			# for item in list(lista):
+
+			# 	lista_soporte.append(
+
+			# 		{		
+			# 			'id':item.id,
+			# 			'soporte':item.soporte
+			# 		}
+
+			# 	)
+
+			return JsonResponse({'message':'','success':'ok','data':falla.id})
+
+		except Exception,e:
+			print e
+			return JsonResponse({'message':'Se presentaron errores de comunicacion con el servidor','status':'error','data':''},status=status.HTTP_500_INTERNAL_SERVER_ERROR)		
+
+	    #return response
+
+
+#eliminar las categorias
+@transaction.atomic
+def eliminar_varios_soportes(request):
+	sid = transaction.savepoint()
+	try:
+		lista=request.POST['_content']
+		respuesta= json.loads(lista)
+		
+		for item in respuesta['lista']:
+			FotoFallaInspeccion.objects.filter(id=item['id']).delete()
+
+
+		transaction.savepoint_commit(sid)
+		return JsonResponse({'message':'El registro se ha eliminado correctamente','success':'ok',
+				'data':''})
+
+	except ProtectedError:
+		return JsonResponse({'message':'No es posible eliminar el registro, se esta utilizando en otra seccion del sistema','success':'error','data':''})
+		
+	except Exception,e:
+		#print e
+		transaction.savepoint_rollback(sid)
+		return JsonResponse({'message':'Se presentaron errores al procesar la solicitud','success':'error',
+			'data':''})
+
+
+
+# Guarda los soportes
+@transaction.atomic
+def Actualizar_detalle_giro_segun_consecutivo(request):
+
+	sid = transaction.savepoint()
+
+	try:
+
+		soporte= request.FILES['archivo']
+
+		lista=request.POST['lista']
+		listado=lista.split(',')
+
+		for item in listado:
+
+			#print item
+			
+			object_detalle=DetalleGiro.objects.get(pk=item)
+
+			object_detalle.estado_id=enumEstados.autorizado
+			object_detalle.soporte_consecutivo_desabilitado=soporte
+			object_detalle.save()
+
+			logs_model=Logs(usuario_id=request.user.usuario.id,accion=Acciones.accion_actualizar,nombre_modelo='giros.detalle_giros',id_manipulado=item)
+			logs_model.save()
+
+			transaction.savepoint_commit(sid)
+
+		return JsonResponse({'message':'Los registros se han actualizado correctamente','success':'ok',
+							'data':''})
+				
+	except Exception,e:
+		#print e
+		return JsonResponse({'message':'Se presentaron errores de comunicacion con el servidor','status':'error','data':''},status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+#Traer la lista de capitulo y capitulo fallas para la vista cierre inspeccion
+@api_view(['GET'])
+def CierreFallaInspecciones(request):
+	if request.method == 'GET':
+		try:
+
+			id_inspeccion= request.GET['id_inspeccion']
+
+			inspeccion = AInspeccion.objects.get(id=id_inspeccion)
+			# fallas = BFallaInspeccion.objects.filter(inspeccion__id=id_inspeccion)
+			
+			listCapitulos = []
+			capitulos = Capitulo.objects.all()
+
+			for cap in list(capitulos):
+				
+				listFallas=[]
+				for fall in list(cap.fallas()):
+
+					fallaInspeccion = BFallaInspeccion.objects.filter(capitulo_falla__id=fall.id, inspeccion__id=id_inspeccion).first()
+					
+					if fallaInspeccion:
+
+						cierrefallaInspeccion = CCierreFallaInspeccion.objects.filter(falla_inspeccion__id=fallaInspeccion.id).first()
+						
+						if cierrefallaInspeccion is None:
+							#print cierrefallaInspeccion.id
+
+							listFallas.append({							
+								'capitulo_falla_id':fall.id,
+								'descripcion':fall.descripcion,
+								'orden':fall.orden,
+								'falla_inspeccion_id':fallaInspeccion.id,
+								'fecha':'',
+								'observaciones':'',
+								'soporte':'',
+								# 'soportes':soportes,
+							})
+				
+				listCapitulos.append({
+					'id' : cap.id,
+					'nombre' : cap.nombre,
+					'fallas' : listFallas
+				})	
+
+			data = {
+
+				'capitulos' : listCapitulos
+			}	
+								
+			return Response({'message':'','success':'ok','data':data})
+
+
+		except Exception as e:
+			print e
+			return Response({'message':'Se presentaron errores al procesar la solicitud','success':'error','data':''},status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+#guardar el cierre de las inspecciones
+@api_view(['POST'])
+@transaction.atomic
+def GuardarCierreInspeccion(request):
+
+	sid = transaction.savepoint()
+	if request.method == 'POST':
+		try:
+			
+			data=json.loads(request.DATA['lista'])
+
+			for item in data['capitulos']:
+
+				for falla in item['fallas']:
+
+					soporte_cierre= request.FILES['soporte_']
+
+					#print soporte_cierre
+					# print'--------------------'
+					# print falla['falla_inspeccion_id']
+					# print falla['fecha']
+					# print falla['observaciones']
+
+					if falla['fecha'] and falla['observaciones'] and soporte_cierre:
+
+						
+						cierreFalla=CCierreFallaInspeccion(falla_inspeccion_id=falla['falla_inspeccion_id'],fecha=falla['fecha'],observaciones=falla['observaciones'],soporte=soporte_cierre)
+						cierreFalla.save()
+
+			return JsonResponse({'message':'El registro se ha guardado correctamente','success':'ok',
+					'data':''})
+			
+		except Exception,e:
+			print e
+			transaction.savepoint_rollback(sid)
+			return JsonResponse({'message':'Se presentaron errores al procesar la solicitud','success':'error',
+				'data':''})
+
+
+
+
+@login_required
+def Inspeccion(request,id_lote=None):
+
+	qsCircuito=LoteCircuito.objects.filter(lote__id=id_lote)
+	#qsLote=Lote.objects.filter(activo=True)
+	qsApoyo=AInspeccion.objects.filter(lote__id=id_lote)
+	qsPoligono=LotePoligono.objects.filter(lote__id=id_lote)
+	qsSector=LoteSector.objects.filter(lote__id=id_lote)
+
+	qsLoteEncabezado=Lote.objects.filter(id=id_lote).first()
+	
+	return render_to_response('inspeccion/inspeccion.html',{'encabezado':qsLoteEncabezado,'circuito':qsCircuito,'apoyo':qsApoyo,'poligono':qsPoligono,'sector':qsSector,'app':'inspeccion','model':'AInspeccion','id_lote':id_lote},context_instance=RequestContext(request))
+
+
+
+@login_required
+def FallaInspeccion(request):
+	
+	return render_to_response('inspeccion/falla_inspeccion.html',{'app':'inspeccion','model':'BFallaInspeccion'},context_instance=RequestContext(request))
+
+
+
+#registrar el la inspeccion
+@login_required
+def RegistroInspeccion(request,id_lote=None):
+
+	qsCircuitos=LoteCircuito.objects.filter(lote__id=id_lote)
+	qsPoligono=LotePoligono.objects.filter(lote__id=id_lote)
+	qsSector=LoteSector.objects.filter(lote__id=id_lote)
+	#qsApoyo=Apoyo.objects.all()
+
+	listado_capitulo_falla=[]
+
+	qsCapitulo=Capitulo.objects.all()
+	qsLoteEncabezado=Lote.objects.filter(id=id_lote).first()
+	
+	return render_to_response('inspeccion/registro_inspeccion.html',{'lote':qsLoteEncabezado,'lista_d_capitulo':listado_capitulo_falla,'capitulo':qsCapitulo,'circuitos':qsCircuitos,'poligono':qsPoligono,'sector':qsSector,'app':'lote','model':'Lote','id_lote':id_lote},context_instance=RequestContext(request))
+
+
+#actualizar la inspeccion
+@login_required
+def ActualizarInspeccion(request,id_inspeccion=None, id_lote=None):
+
+	qsCircuitos=LoteCircuito.objects.filter(lote__id=id_lote)
+	qsPoligono=LotePoligono.objects.filter(lote__id=id_lote)
+	qsSector=LoteSector.objects.filter(lote__id=id_lote)
+
+	listado_capitulo_falla=[]
+
+	qsCapitulo=Capitulo.objects.all()
+	qsLoteEncabezado=Lote.objects.filter(id=id_lote).first()
+	
+	return render_to_response('inspeccion/editar_inspeccion.html',{'lote':qsLoteEncabezado,'lista_d_capitulo':listado_capitulo_falla,'capitulo':qsCapitulo,'circuitos':qsCircuitos,'poligono':qsPoligono,'sector':qsSector,'app':'lote','model':'Lote','id_inspeccion':id_inspeccion,'id_lote':id_lote},context_instance=RequestContext(request))
+
+
+
+#Cerrar la pnc
+@login_required
+def CerrarPnc(request,id_inspeccion=None, id_lote=None):
+
+	qsCircuito=Circuito.objects.filter(activo=True)
+	qsPoligono=Poligono.objects.filter(activo=True)
+	qsSector=Sector.objects.filter(activo=True)
+
+	listado_capitulo_falla=[]
+
+	qsCapitulo=Capitulo.objects.all()
+	qsLoteEncabezado=Lote.objects.filter(id=id_lote).first()
+	
+	return render_to_response('inspeccion/cerrar_pnc.html',{'lote':qsLoteEncabezado,'lista_d_capitulo':listado_capitulo_falla,'capitulo':qsCapitulo,'circuito':qsCircuito,'poligono':qsPoligono,'sector':qsSector,'app':'lote','model':'Lote','id_inspeccion':id_inspeccion,'id_lote':id_lote},context_instance=RequestContext(request))
+
+

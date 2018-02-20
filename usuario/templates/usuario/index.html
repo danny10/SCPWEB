@@ -19,8 +19,11 @@
 
 		            <div class="alert alert-success alert-dismissable">
 					  <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-					  <i class="fa fa-home pr10"></i>
-					  <strong>Bienvenido a SCP señor(a) {{ user.usuario.persona.nombres }} {{ user.usuario.persona.apellidos }}</strong>
+					  <strong>Estimado usuario(a) {{ user.usuario.persona.nombres }} {{ user.usuario.persona.apellidos }}</strong><br>
+
+              <strong>Bienvenido al Sistema de registro y seguimiento a productos no conformes – SNC.</strong><br>
+              <strong>Ultima entrada: <span>{{ user.last_login }}</span></strong>
+
 					</div>
             		
             	</div>

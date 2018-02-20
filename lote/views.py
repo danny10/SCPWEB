@@ -1,3 +1,4 @@
+# encoding: utf-8
 from django.shortcuts import render,redirect,render_to_response
 from django.core.urlresolvers import reverse
 from rest_framework import viewsets, serializers
@@ -9,7 +10,8 @@ from rest_framework.request import Request
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 import json
-from .models import Lote,LoteCircuito,LoteSector,LotePoligono
+from .models import Lote,LoteCircuito,LoteSector,LotePoligono,Mes
+from inspeccion.models import AInspeccion,BFallaInspeccion,FotoFallaInspeccion
 from provincia.models import Provincia
 from contratista.models import Contratista
 from contratista.views import ContratistaSerializer
@@ -26,6 +28,20 @@ from django.db.models.deletion import ProtectedError
 from django.contrib.auth.decorators import login_required
 from rest_framework.decorators import api_view, throttle_classes
 from SCPWEB.functions import functions
+from docx import Document
+
+from docx.shared import Inches , Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH , WD_COLOR_INDEX
+
+from docx.section import Section, Sections
+
+from docx.enum.section import WD_ORIENT
+
+
+import os
+import mimetypes
+from django.http import StreamingHttpResponse
+from django.core.servers.basehttp import FileWrapper
 
 
 #Api para los lotes
@@ -992,13 +1008,233 @@ def eliminarAsociacionPoligonoLote(request):
 
 
 
+
+def EjemploWord(request):
+
+	ano= request.GET['ano']
+	mes= request.GET['mes']
+	inspeccion= request.GET['inspeccion']
+	lote_id= request.GET['lote_id']
+	qset=''
+
+
+	qset = Q(lote__id=lote_id)
+
+	if inspeccion:
+		qset =  qset &(Q(numero_inspeccion=inspeccion))
+
+
+	if ano:
+		qset =  qset &(Q(fecha__year=ano))
+
+
+	if mes:
+		qset =  qset &(Q(fecha__month=mes))
+
+	
+	#inspeccion = AInspeccion.objects.filter(qset).values('sector__id','sector__nombre').distinct()
+	#listsector=''
+	# for item in list(inspeccion):
+
+	# 	listsector='{}{},'.format(listsector,item['sector__nombre'])
+
+	# print listsector
+
+	inspeccion = AInspeccion.objects.filter(qset).first()
+
+	newpath = r'media/prueba/'
+	functions.descargarArchivoS3(str('plantillas/SCP/informeSCP.docx'),str(newpath))
+
+	document = Document(newpath+'informeSCP.docx')
+
+	# styles = document.styles
+
+	# for item in styles:
+	# 	print item
+
+	# font = styles['Normal'].font
+	# font.name = 'Arial'
+
+	# sections = document.sections
+	# section = sections[0]
+	# print section.hearder
+	
+	#document.add_heading('Document Title', 0)
+	
+
+	encabezado = document.add_paragraph('')
+	parrafo = encabezado.add_run(unicode('INFORME DE INSPECCIÓN DE CALIDAD DE LAS OBRAS', 'utf-8'))
+	parrafo.bold = True
+	parrafo.italic=False
+	parrafo.font.size = Pt(22)
+	
+	p = document.add_paragraph('')
+	parrafo2=p.add_run('___________________________________________')
+	parrafo2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+	parrafo2.font.size = Pt(20)
+
+
+	encabezado.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+	#linea = document.add_paragraph('',style='IntenseQuote')
+	linea = document.add_paragraph('')
+
+	fecha=str(inspeccion.fecha).split('-')
+
+
+
+	p = document.add_paragraph('PROYECTO: '+ inspeccion.apoyo.nombre)
+	p = document.add_paragraph('CIRCUITO: '+ inspeccion.circuito.nombre)
+	p = document.add_paragraph('DISTRIBUIDORA: '+ inspeccion.lote.sucursal.nombre)
+	p = document.add_paragraph('CONTRATISTA: '+ inspeccion.lote.contratista.nombre)
+	p = document.add_paragraph(unicode('INSPECCIÓN: ', 'utf-8')+ str(inspeccion.numero_inspeccion) +' DEL MES DE '+ str(fecha[1]) +' DE '+ str(fecha[0]))
+	p = document.add_paragraph('SECTOR: '+ inspeccion.sector.nombre)
+	p = document.add_paragraph('INSPECTORES FIRMA VERIFICADORA CUSA ATRATO: ')
+
+	# p.add_run('bold').bold = True
+	# p.add_run(' and some ')
+	# p.add_run('italic.').italic = True
+
+	p = document.add_paragraph('') #parrafo vacio (espacio enter)
+
+	#observacion
+	#p1 = document.add_paragraph('',style='ListNumber')
+	p = document.add_paragraph('')
+	observ = p.add_run('1. OBJETIVO.')
+	observ.bold = True
+	p = document.add_paragraph(unicode('Realizar un acompañamiento durante el avance del proyecto para retroalimentar sobre posibles errores en la construcción entregando las recomendaciones particulares sobre las mejoras que permitan prever o corregir las desviaciones en las actividades ejecutadas.', 'utf-8'))
+
+
+	p = document.add_paragraph('') #parrafo vacio (espacio enter)
+
+	#descripcion
+	#p3 = document.add_paragraph('',style='ListNumber')
+	p = document.add_paragraph('')
+	desc = p.add_run(unicode('2. DESCRIPCIÓN.', 'utf-8'))
+	desc.bold = True
+
+	#p = document.add_paragraph(unicode('Se realizó inspección al sector Barrio Nuevo donde desarrollan las obras del proyecto lote 5 OFID, circuito NIBA-112 polígono 2. En este sector se ha realizado el izaje de postes, con cimentaciones, instalación de puestas a tierra, instalación de armados, estructuras conectadas al neutro del sistema y de puestas a tierra a través del cable de tierra del poste, tendidos de cable de media y baja tensión e instalación de transformadores.', 'utf-8'))
+
+
+
+	p = document.add_paragraph('') #parrafo vacio (espacio enter)
+
+	#DESARROLLO DE LA INSPECCIoN
+	#p6 = document.add_paragraph('',style='ListNumber')
+	p = document.add_paragraph('')
+	descInps = p.add_run(unicode('3. DESARROLLO DE LA INSPECCIÓN.', 'utf-8'))
+	descInps.bold = True
+
+	#p = document.add_paragraph(unicode('En los apoyos inspeccionados se verificaron para el izaje de postes la verticalidad o aplomo de los postes instalados, la instalación de las tierras, cimentaciones y armados de estructuras, puestas a tierra de las estructuras, la instalación de los vientos, la correcta instalación de transformadores, cierre del neutro del sistema y del cable de tierra en los postes con su varilla de cobre, tendidos de cables de media y baja tensión.', 'utf-8'))
+
+	p = document.add_paragraph('') #parrafo vacio (espacio enter)
+
+	# document.add_heading('Heading, level 1', level=1)
+	# document.add_paragraph('Intense quote', style='IntenseQuote')
+
+	# document.add_paragraph(
+	#     'first item in unordered list', style='ListBullet'
+	# )
+
+	#document.add_picture('monty-truth.png', width=Inches(1.25))
+
+
+	falla_inspeccion = BFallaInspeccion.objects.filter(inspeccion__id=inspeccion.id)
+
+	#print inspeccion.id
+
+	for item in list(falla_inspeccion):
+
+		foto_falla = FotoFallaInspeccion.objects.filter(falla_inspeccion__id=item.id)
+		
+		valor=0
+		calificaciones=''
+		for item2 in list(foto_falla):
+
+			# print item2.id
+			# print item2.soporte
+			#a=document.add_picture(item2.soporte, width=Inches(1.25))
+
+			if int(item2.falla_inspeccion.calificacion)==1:
+
+				calificaciones='Conforme'
+
+			elif int(item2.falla_inspeccion.calificacion)==2:
+
+				calificaciones='No Conforme'
+
+			elif int(item2.falla_inspeccion.calificacion)==3:
+
+				calificaciones='No aplica'
+
+
+			if valor==0:				
+				table = document.add_table(rows=2, cols=2)
+				table.style ='Table Grid'
+			
+			
+			hdr_cells = table.rows[0].cells
+
+			paragraph = hdr_cells[valor].paragraphs[0]
+			run = paragraph.add_run()
+			run.add_picture(item2.soporte, width = 2800000, height = 1600000)
+
+			
+			row_cells = table.rows[1].cells
+			#row_cells[0].text = str('dsadasda')
+			row_cells[valor].text = str('Postes '+ item2.falla_inspeccion.inspeccion.apoyo.nombre + ' ' +item2.falla_inspeccion.capitulo_falla.descripcion+'. '+calificaciones)
+
+			valor=valor+1
+
+			if valor==2:
+				p= document.add_paragraph('') #parrafo vacio (espacio enter)
+				addTableAfterParagraph(table,p)
+				valor=0
+
+			#row_cells[2].text = '2'
+	
+
+	p = document.add_paragraph('') #parrafo vacio (espacio enter)
+
+	#RECOMENDACIONES
+	#p6 = document.add_paragraph('',style='ListNumber')
+	p = document.add_paragraph('')
+	descInps = p.add_run('4. RECOMENDACIONES.')
+	descInps.bold = True
+		
+
+	document.add_page_break()
+
+	nombreArchivo='INF DE CALIDAD.docx'
+
+	document.save(nombreArchivo)
+
+
+	chunk_size = 108192
+
+	response = StreamingHttpResponse(FileWrapper(open(nombreArchivo,'rb'),chunk_size),
+				content_type=mimetypes.guess_type(nombreArchivo)[0])
+	response['Content-Length'] = os.path.getsize(nombreArchivo)
+	response['Content-Disposition'] = "attachment; filename=%s" % nombreArchivo
+			
+	return response
+
+
+
+def addTableAfterParagraph(table, paragraph):
+    tbl, p = table._tbl, paragraph._p
+    p.addnext(tbl)
+
+
 @login_required
 def Lotes(request):
 	qsContratista=Contratista.objects.all()
 	qsSector=Sector.objects.filter(activo=True)
 	qsCircuito=Circuito.objects.filter(activo=True)
+	qsmes=Mes.objects.all()
 
-	return render_to_response('lotes/lote.html',{'contratista':qsContratista,'sector':qsSector,'circuito':qsCircuito,'app':'lote','model':'Lote'},context_instance=RequestContext(request))
+
+	return render_to_response('lotes/lote.html',{'mes':qsmes,'contratista':qsContratista,'sector':qsSector,'circuito':qsCircuito,'app':'lote','model':'Lote'},context_instance=RequestContext(request))
 
 #registrar el lote
 @login_required

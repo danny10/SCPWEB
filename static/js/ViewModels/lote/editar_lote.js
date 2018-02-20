@@ -28,7 +28,7 @@ function LoteViewModel() {
     self.nombre_poligono=ko.observable('');
 
     self.tabIndex=ko.observable(0);
-    self.nombreBoton=ko.observable('Seguiente');
+    self.nombreBoton=ko.observable('Siguiente');
     self.disable=ko.observable(0);
   
 
@@ -692,7 +692,7 @@ function LoteViewModel() {
             self.disable(1);
 
         }
-        self.nombreBoton('Seguiente');
+        self.nombreBoton('Siguiente');
 
     }
 

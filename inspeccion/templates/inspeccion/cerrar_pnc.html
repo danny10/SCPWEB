@@ -1,0 +1,151 @@
+{% extends 'page.html' %}
+{% load staticfiles %}
+
+{%block imports_css %}
+ <link rel="stylesheet" type="text/css" href='{% static "css/fileInput/fileinput.min.css" %}'>
+ <link rel="stylesheet" type="text/css" href='{% static "js/plugins/datepicker/css/bootstrap-datetimepicker.css" %}'>
+    
+    <style type="text/css">
+
+    #rootwizard .nav-pills > li.active > a{
+    background-color: #4a89dc !important;
+    }
+
+    </style>
+
+{% endblock imports_css %}
+
+{% block title %}Cierre inspeccion{% endblock title%}
+{% block mapa %}
+  <li><a href="/usuario/"><i class="glyphicon glyphicon-home"></i></a></li>
+  <li><a href="{% url 'lote.lote' %}">Listado de lote</a></li>
+  <li><a href="{% url 'inspeccion.inspeccion' id_lote %}">Inspecciones</a></li>
+  <li class="active">Cierre inspeccion</li>
+{% endblock mapa %}
+{% block encabezado %}<!--lote-->{% endblock encabezado %}
+{% block opciones_listado %}  {% endblock opciones_listado %} 
+{% block busqueda %} {% endblock busqueda %}  
+
+{% block contenido %}
+
+  <div class="row" ><br><br>
+
+    <div class="col-lg-12">
+  
+        <div class="row">
+
+          <div class="panel" id="spy4">
+
+            <div class="panel-body">
+
+              <div class="row">
+                
+                 <!--ko foreach:{data:cierre_falla_inspeccionVO.capitulos, as:'item'}-->
+
+                   <!--ko if: $parent.tabIndex()==$index()+1-->
+
+                      <center><h3>Registro de cierre por Inspeccion en lote {{lote.nombre}} - apoyo </h3></center>
+                      <!-- <center><h4><span data-bind="text:'(Paso '+$parent.tabIndex2()+': Registro de fallas'"></span></h4></center> -->
+                      <center><h4><span data-bind="text:item.nombre"></span></h4></center><br>
+
+                      <div class="col-lg-12" data-bind="foreach:{data:item.fallas, as:'fall'}">
+
+                        <div class="row">
+                          <div class="col-lg-6">
+                            
+                            <h4 data-bind="text:fall.orden()+' - '+fall.descripcion()"></h4>
+
+                            <input type="hidden" name="id_falla" id="id_falla" data-bind="value:fall.falla_inspeccion_id">
+
+                              <div class="form-group">
+                                <label>Fecha (*)</label>
+                                <div class="input-group date">
+
+                                  <input class="form-control" type="text" placeholder="Seleccione la fecha" data-bind="datePicker:fall.fecha,value:fall.fecha, dateTimePickerOptions:{maxDate:new Date()}" onkeypress="return false">
+                                  
+                                  <label for="fecha_nacimiento" class="input-group-addon cursor"><i class="fa fa-calendar"></i>
+                                  </label>
+                                </div> 
+                              </div>  
+
+                            <div class="form-group">
+                              <label>Observacion (*)</label>
+                              <textarea rows="3" data-bind="value:fall.observaciones" class="form-control" placeholder="Dígite la obervacion"></textarea>
+                            </div>
+
+                            <div class="form-group">          
+                              <label>Documento (*)</label>
+                              <input type="file" class="form-control" data-bind="fileData:{value:fall.soporte,allowedFileExtensions: ['png','jpg','jpge','pdf'], elErrorContainer: '#errorBlock'+ fall.id, removeLabel:''}, attr:{name:'archivo'+fall.capitulo_falla_id, id:'archivo' + fall.id}"/> 
+                            </div>
+
+                          </div><!--cierra col lg 6-->
+                        </div>
+
+                         <button type="button" class="btn btn-primary" data-bind="click: function(){ $root.guardar_cerrar_nc(fall.falla_inspeccion_id(),fall.capitulo_falla_id()); }">
+                            <i class="fa fa-floppy-o"></i> Cerrar NC
+                          </button>
+
+
+                      </div>
+                    <!--/ko-->
+
+                <!--/ko-->
+                
+              </div><!--cierra row-->
+
+            </div>
+
+            <div class="modal-footer">
+
+              <!-- ko if: tabIndex()>1 -->
+                <button type="button" class="btn btn-primary" data-bind="click:atras_vistas_parciales">Atras</button>
+              <!--/ko -->
+
+              <!-- ko if: tabIndex()===1 -->
+                <button type="button" class="btn btn-primary" disabled="disabled">Atras</button>
+              <!--/ko -->
+
+              <button type="button" class="btn btn-primary" data-bind="click:vistas_parciales">
+                <span data-bind="text:nombreBoton"></span>
+              </button>
+            
+            </div>
+
+          </div>
+
+        </div><!--cierra row de validacion de la tabla-->
+
+    </div><!--col-lg-12" -->
+  </div><!--cierra row -->
+
+  <input type="hidden" id="hdCantidad" value="{{capitulo|length}}">
+
+<!--Loading-->
+  
+{% endblock contenido %}
+
+{% load staticfiles %}
+
+{%block imports %}
+
+  <script src='{% static "js/plugins/globalize/globalize.min.js" %}'></script>
+  <script src='{% static "js/plugins/moment/moment.min.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/plugins/datepicker/js/bootstrap-datetimepicker.js" %}'>
+  </script>
+ 
+  <script type="text/javascript" src='{% static "js/plugins/fileInput/fileinput.js" %}'></script>
+  <script type="text/javascript" src='{% static "js/ViewModels/inspeccion/cierre_falla_inspeccion.js" %}'></script>
+
+  <script type="text/javascript">
+
+    $(document).ready(function () {
+
+       cierre_falla_inspeccion.id_inspeccion_consulta({{id_inspeccion}});
+       cierre_falla_inspeccion.consultar_capitulo_falla();
+
+    });  
+
+  </script>
+
+{% endblock imports %}
+

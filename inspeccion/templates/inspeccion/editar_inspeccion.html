@@ -19,7 +19,8 @@
 {% block mapa %}
   <li><a href="/usuario/"><i class="glyphicon glyphicon-home"></i></a></li>
   <li><a href="{% url 'lote.lote' %}">Listado de lote</a></li>
-  <li class="active">Registrar lote</li>
+  <li><a href="{% url 'inspeccion.inspeccion' id_lote %}">Inspecciones</a></li>
+  <li class="active">Actualizar inspeccion</li>
 {% endblock mapa %}
 {% block encabezado %}<!--lote-->{% endblock encabezado %}
 {% block opciones_listado %}  {% endblock opciones_listado %} 
@@ -39,23 +40,36 @@
 
               <div class="row">
                 
-                <div class="col-lg-6" data-bind="visible:tabIndex()===0">
+                <div class="col-lg-12" data-bind="visible:tabIndex()===0">
 
-                {% include 'inspeccion/_inspeccion_registro.html' %}
+                  <center><h3>Actualizar Inspeccion en lote {{lote.nombre}}</h3></center>
+                  <center><h4>(Paso 1: Encabezado de la inspeccion )</h4></center><br>
 
+                  <div class="col-lg-6">
+
+                    <h4>Contratista: {{lote.contratista.nombre}}</h4>
+                    <h4>Municipio: {{lote.provincia.nombre}}</h4>
+                    <h4>EDE: {{lote.sucursal.nombre}}</h4><br>
+
+                    {% include 'inspeccion/_inspeccion_registro.html' %}
+
+                  </div>
                 </div>
-               
 
-                
                  <!--ko foreach:{data:inspeccionVO.capitulos, as:'item'}-->
 
                    <!--ko if: $parent.tabIndex()==$index()+1-->
 
-                    <h3 data-bind="text:item.nombre"> </h3>
+                      <center><h3>Registro de nuevo Inspeccion en lote {{lote.nombre}} - apoyo </h3></center>
+                      <center><h4><span data-bind="text:'(Paso '+$parent.tabIndex2()+': Registro de fallas'"></span></h4></center>
+                      <center><h4><span data-bind="text:item.nombre"></span></h4></center><br>
 
                       <div class="col-lg-12" data-bind="foreach:{data:item.fallas, as:'fall'}">
-                        
-                            <h3 data-bind="text:fall.descripcion"></h3>
+
+                        <div class="row">
+                          <div class="col-lg-6">
+
+                            <h4 data-bind="text:fall.orden()+' - '+fall.descripcion()"></h4>
 
                             <div class="radio-custom radio-info mb5">
                               <input type="radio" data-bind="checked:fall.calificacion, attr:{name:'radioExample'+fall.capitulo_falla_id(), id:'conforme'+fall.capitulo_falla_id()}" value="1">
@@ -76,15 +90,14 @@
 
                              <button type="button" class="btn btn-primary" data-bind="click:$root.abrir_modal_foto">Cargar foto</button>
 
-<!--                             <div class="form-group">          
-                              <label>Documento</label>
-                              <input type="file" class="form-control" data-bind="fileData:{value:fall.soporte,allowedFileExtensions: ['png','jpg','jpge','pdf'], elErrorContainer: '#errorBlock'+ fall.id, removeLabel:''}, attr:{name='archivo'+fall.capitulo_falla_id, id:'archivo' + fall.id}"/> 
-                            </div> -->
 
                             <div class="form-group">
                               <label>Observacion</label>
                               <textarea rows="3" data-bind="value:fall.observaciones" class="form-control" placeholder="Dígite la obervacion"></textarea>
                             </div>
+
+                          </div><!--cierra col lg 6-->
+                        </div>
 
                       </div>
 
@@ -98,7 +111,13 @@
 
             <div class="modal-footer">
 
-              <button type="button" class="btn btn-primary" data-bind="click:atras_vistas_parciales">Atras</button>
+              <!-- ko if: tabIndex()>0 -->
+                <button type="button" class="btn btn-primary" data-bind="click:atras_vistas_parciales">Atras</button>
+              <!--/ko -->
+
+              <!-- ko if: tabIndex()===0 -->
+                <button type="button" class="btn btn-primary" disabled="disabled">Atras</button>
+              <!--/ko -->
 
               <button type="button" class="btn btn-primary" data-bind="click:vistas_parciales">
                 <span data-bind="text:nombreBoton"></span>
@@ -115,7 +134,7 @@
   </div><!--cierra row -->
 
 
-  <!--Modal-->
+  <!--Modal de abrir foto-->
 
 <div id="modal_abrir_foto" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -131,54 +150,65 @@
 
               <form action="." method="post">
 
+
                 <div class="form-group">          
-                <label>Foto</label>
-                 <input type="file" class="note-image-input" id="archivo" name="archivo"  multiple data-bind="fileData:{value:foto,allowedFileExtensions: ['png','jpg','jpge'],elErrorContainer: '#errorBlock', removeLabel:''}"/>  
+                  <label>Foto</label>
+                  <input type="file" class="form-control" id="archivo" name="archivo"  data-bind="fileData:{value:foto,allowedFileExtensions: ['png','jpg','jpge','pdf'],
+                                     elErrorContainer: '#errorBlock', removeLabel:''}"/> 
                 </div>
+
 
               </form>
 
               <button type="button" class="btn btn-primary" data-bind="click:guardar_soporte_foto">
                 <i class="fa fa-floppy-o"></i> Guardar
-              </button>
+              </button><br><br><br>
 
 
+              <div data-bind="html: mensaje_soporte_editar"></div>
 
-              <table class="table" data-bind="visible:soportes_fotos()!=null && soportes_fotos().length > 0">
-                <thead>
-                  <tr>
-                    <th width="10%">
-                        <div class="option-group field admin-form">
-                          <label class="option option-primary"  style="">
-                            <input type="checkbox" data-bind="checked:checkall">
-                            <span class="checkbox"></span>
-                          </label>
-                        </div> 
-                    </th>                      
-                    <th>Nombre</th>
-                  </tr>
-                </thead>
-                <tbody data-bind="foreach:{data:soportes_fotos, as:'item'}">
-                  <tr data-bind="if:!item.eliminado()">
+              <div data-bind="visible:(listado_soportes_editar()!=null && listado_soportes_editar().length > 0)">
 
-                      <td>
-                        <div class="option-group field admin-form">
-                          <label class="option option-primary"  style="">
-                            <input type="checkbox" data-bind="checked:procesado">
-                            <span class="checkbox"></span>
-                          </label>
-                        </div> 
-                      </td>
-                      <td>  <a data-gallery="" data-bind="attr: {href: item.foto}" target="_blank" style="cursor:pointer;">
-                            <img data-bind='attr:{src:item.foto}' height="40" width="40">
-                        </a> 
-                      </td>
+                <span class="panel-controls">
+                  <a  data-placement="top"  data-toggle="tooltip" title="" data-original-title="Eliminar soportes" data-bind="click:eliminar_soporte" data-toggle="modal" style="cursor:pointer;">
+                    <i class="fa fa-trash fa-2x"></i>
+                  </a>
+                </span>
 
-                  </tr>  
-                </tbody>
-              </table>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th width="10%">
+                          <div class="option-group field admin-form">
+                            <label class="option option-primary"  style="">
+                              <input type="checkbox" data-bind="checked:checkall">
+                              <span class="checkbox"></span>
+                            </label>
+                          </div> 
+                      </th>                      
+                      <th>Nombre</th>
+                    </tr>
+                  </thead>
+                  <tbody data-bind="foreach:{data:listado_soportes_editar, as:'item'}">
+                    <tr>
 
+                        <td>
+                          <div class="option-group field admin-form">
+                            <label class="option option-primary"  style="">
+                              <input type="checkbox" data-bind="checked:eliminado,value:id">
+                              <span class="checkbox"></span>
+                            </label>
+                          </div> 
+                        </td>
+                        <td>  <a data-gallery="" data-bind="attr: {href: item.soporte}" target="_blank" style="cursor:pointer;">
+                              <i class="fa fa-file fa-2x"></i>
+                          </a> 
+                        </td>
 
+                    </tr>  
+                  </tbody>
+                </table>
+              </div>
 
 
             </div>      
@@ -194,7 +224,7 @@
 
 <input type="hidden" id="hdCantidad" value="{{capitulo|length}}">
 
-<!--Modal-->
+<!--Modal de apoyo-->
 
 <div id="modal_apoyo" class="modal fade bd-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-sm">
@@ -215,15 +245,15 @@
 
           <div class="form-group">
             <label>Latitud (*)</label>
-              <input type="text" data-bind="value:apoyoVO.latitud" class="form-control" placeholder="Dígite la latitud"/>
+              <input type="text" data-bind="value:apoyoVO.latitud" class="form-control" placeholder="0" disabled="disabled" />
           </div>
 
           <div class="form-group">
             <label>Logitud (*)</label>
-              <input type="text" data-bind="value:apoyoVO.longitud" class="form-control" placeholder="Dígite la longitud"/>
+              <input type="text" data-bind="value:apoyoVO.longitud" class="form-control" placeholder="0" disabled="disabled" />
           </div>
 
-          <button type="button" class="btn btn-primary" data-bind="click:localizar_mapa"></i> Capturar ubicacion</button>
+          <button type="button" class="btn btn-primary" disabled="disabled"></i> Capturar ubicacion</button>
 
         </form>
 
@@ -251,38 +281,18 @@
 
   <script src='{% static "js/plugins/globalize/globalize.min.js" %}'></script>
   <script src='{% static "js/plugins/moment/moment.min.js" %}'></script>
-  <script type="text/javascript" src='{% static "js/plugins/datepicker/js/bootstrap-datetimepicker.js" %}'>
-  </script>
- 
+  <script type="text/javascript" src='{% static "js/plugins/datepicker/js/bootstrap-datetimepicker.js" %}'></script>
   <script type="text/javascript" src='{% static "js/plugins/fileInput/fileinput.js" %}'></script>
   <script type="text/javascript" src='{% static "js/ViewModels/inspeccion/editar_inspeccion.js" %}'></script>
 
   <script type="text/javascript">
 
     $(document).ready(function () {
-      //lote.consultar(1);//iniciamos la primera funcion
-      //lote.consultar_circuito();//iniciamos la primera funcion
+
        inspeccion.consultar_apoyo();
-       //inspeccion.consultar_por_id({{id_inspeccion}});
-       //inspeccion.inspeccionVO.lote_id({{id_lote}});
+       inspeccion.inspeccion_id_soporte({{id_inspeccion}});
        inspeccion.consultar_capitulo_falla({{id_inspeccion}});
-       
-
-       // var fallas = [];
-
-       // {% for item in capitulo %}        
-       //   inspeccion.inspeccionVO.capitulos.push({id:{{ item.id }}, nombre:'{{ item.nombre }}', fallas:ko.observableArray([  
-       //    {% for fall in item.fallas %}
-       //      { capitulo_falla_id:{{fall.id}}, descripcion:'{{ fall.descripcion }}', calificacion: ko.observable(''), observaciones: ko.observable(''), soportes:ko.observableArray([]) }
-       //      {% if capitulo|length > forloop.counter %}
-       //      ,
-       //      {% endif %}
-       //    {% endfor %} ])});
-
-       // {% endfor %}
-     
-       // // //inspeccion.consultar_capitulo();
-
+      
     });  
 
   </script>

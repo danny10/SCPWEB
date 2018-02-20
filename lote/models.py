@@ -37,3 +37,8 @@ class LotePoligono(models.Model):
 	
 	lote=models.ForeignKey(Lote,related_name="lote_poligono",on_delete=models.PROTECT)
 	poligono=models.ForeignKey(Poligono,related_name="poligono_lote",on_delete=models.PROTECT)
+
+
+class Mes(models.Model):
+	
+	nombre = models.CharField(max_length=255)

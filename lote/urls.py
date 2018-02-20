@@ -23,4 +23,6 @@ urlpatterns = [
 	url(r'^asociar_poligono_lote/$', views.AsociarPoligonoLoteEditar, name='lote.asociar_poligono_lote'),
 	url(r'^eliminar_poligono_lote/$', views.eliminarAsociacionPoligonoLote, name='lote.eliminar_poligono_lote'),
 
+	url(r'^ejemplo_word/$', views.EjemploWord, name='inspeccion.ejemplo_word'),
+
 ]

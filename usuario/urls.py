@@ -8,5 +8,7 @@ urlpatterns = [
     url(r'^login/$', views.login_view, name='usuario.login'),
     url(r'^logout/$', views.logout_view, name='usuario.logout'),
     url(r'^cambiousuario/$', views.cambiar_usuario, name='usuario.changePass'),
-    url(r'^cambiar_clave/$', views.passwordChange, name='usuario.cambioclave'), 
+    url(r'^cambiar_clave/$', views.passwordChange, name='usuario.cambioclave'),
+    url(r'^recordar_pass/$', views.recordar_pass, name='usuario.recordar_pass'),
+    url(r'^sendMail/$', views.sendMail, name='usuario.sendMail'), 
 ]
