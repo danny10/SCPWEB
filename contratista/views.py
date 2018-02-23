@@ -90,6 +90,13 @@ class ContratistaViewSet(viewsets.ModelViewSet):
 			try:
 				serializer = ContratistaSerializer(data=request.DATA,context={'request': request})
 
+				contratista = Contratista.objects.filter(rnc=request.DATA['rnc'])
+
+				if contratista:
+					return Response({'message':'Ya existe un contratista registrado con el rnc digitado','success':'fail',
+						'data':''},status=status.HTTP_400_BAD_REQUEST)
+
+
 				if serializer.is_valid():
 					serializer.save()
 
